@@ -1,0 +1,48 @@
+{
+  "name": "react-diagram-schema",
+  "version": "1.0.0",
+  "description": "Takes React components as input and returns a schema as output.",
+  "main": "build-schema.js",
+  "scripts": {
+    "build": "node build-schema.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "bin": {
+    "build-schema": "./build-schema.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AmiraBasyouni/react-diagram-schema.git"
+  },
+  "keywords": [
+    "react",
+    "babel",
+    "jsx",
+    "typescript",
+    "ast",
+    "parser",
+    "schema",
+    "component-diagram",
+    "component-analysis",
+    "code-visualization",
+    "developer-tooling"
+  ],
+  "author": "Amira Basyouni",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/AmiraBasyouni/react-diagram-schema/issues"
+  },
+  "homepage": "https://github.com/AmiraBasyouni/react-diagram-schema#readme",
+  "devDependencies": {
+    "@eslint/js": "^9.30.1",
+    "@eslint/json": "^0.12.0",
+    "eslint": "^9.30.1",
+    "eslint-plugin-react": "^7.37.5",
+    "globals": "^16.3.0",
+    "prettier": "3.6.2"
+  },
+  "dependencies": {
+    "@babel/parser": "^7.28.0",
+    "@babel/traverse": "^7.28.0"
+  }
+}
