@@ -39,6 +39,11 @@ cd react-diagram-schema
 npm install
 ```
 
+build the schema using:
+```bash
+node build-schema.js
+```
+or, if installed globally, using: 
 ```bash
 npx build-schema
 ```
