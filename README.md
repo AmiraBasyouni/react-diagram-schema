@@ -26,17 +26,21 @@ Output Schema:
 ```
 
 ## Get Started
+
 ```bash
 git clone https://github.com/yourusername/react-diagram-schema
 ```
+
 ```bash
 cd react-diagram-schema
 ```
+
 ```bash
 npm install
 ```
+
 ```bash
-npm run dev
+npx build-schema
 ```
 
 ## Roadmap
@@ -44,5 +48,5 @@ npm run dev
 See [ROADMAP.md](https://github.com/AmiraBasyouni/react-diagram-schema/blob/main/ROADMAP.md) for next steps and feature plans.
 
 ## License
-MIT
 
+MIT
