@@ -1,5 +1,8 @@
-import * as parser from "@babel/parser";
-import traverse from "@babel/traverse";
+#!/usr/bin/env node
+
+const parser = require("@babel/parser");
+const traverse = require("@babel/traverse").default;
+
 //import * as t from "@babel/types";
 
 const schema = {
