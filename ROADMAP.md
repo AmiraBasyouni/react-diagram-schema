@@ -9,10 +9,10 @@ This file outlines the phases and tasks for building the `react-diagram-schema` 
 Extract meaningful metadata from React components and output it as structured JSON.
 
 ### Goals:
-- [ ] Parse React code using `@babel/parser`
-- [ ] Traverse AST with `@babel/traverse`
-- [ ] Identify component name and logic
-- [ ] Extract internal state and functions
+- [x] Parse React code using `@babel/parser`
+- [x] Traverse AST with `@babel/traverse`
+- [x] Identify component name and logic
+- [x] Extract internal state and functions
 - [ ] Extract external props, children, hooks
 - [ ] Output JSON schema for each component
 
