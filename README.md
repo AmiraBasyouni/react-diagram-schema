@@ -8,7 +8,7 @@ Parses `.js`, `.jsx`, `.ts`, or `.tsx` files to extract React component logic, s
 
 ## Example
 
-```ts
+```json
 Input: ToastPlayground.tsx
 Output Schema:
 {
