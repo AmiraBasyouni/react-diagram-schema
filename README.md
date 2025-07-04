@@ -8,9 +8,10 @@ Parses `.js`, `.jsx`, `.ts`, or `.tsx` files to extract React component logic, s
 
 ## Example
 
-```json
-Input: ToastPlayground.tsx
+Input: `ToastPlayground.tsx`
+
 Output Schema:
+```json
 {
   "name": "ToastPlayground",
   "logic": "Renders form UI",
