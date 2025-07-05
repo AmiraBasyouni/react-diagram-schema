@@ -4,7 +4,7 @@ const path = require("path");
 
 function generateSchemaFile(
   schema,
-  outputDirName = "schema",
+  outputDirName = "../schema",
   outputFileName = "schema.json",
 ) {
   const outputDir = path.join(__dirname, outputDirName);
