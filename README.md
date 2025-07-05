@@ -2,32 +2,53 @@
 
 Turn React components into a structured schema you can use to generate diagrams.
 
-**📌 Status:** 
-Actively developed. MVP in progress. Feedback welcome!
-
 ## What It Does
 
 Parses `.js`, `.jsx`, `.ts`, or `.tsx` files to extract React component logic, state, props, and other metadata into a clean JSON schema.
 
 ## Example
 
-Input: `ToastPlayground.tsx`
+Input: `AppPlayground.js`
 
 Output Schema:
 ```json
 {
-  "name": "ToastPlayground",
-  "logic": "Renders form UI",
-  "internal": {
-    "states": [["message", "setMessage"]],
-    "functions": ["createToast()"]
-  },
-  "external": {
-    "props": [],
-    "children": false
-  }
+  "filename": "AppPlayground.js",
+  "components": [
+    {
+      "name": "App",
+      "description": "",
+      "internal": {
+        "states": [
+          [
+            "count",
+            "setCount"
+          ]
+        ],
+        "functions": []
+      },
+      "external": {
+        "props": [],
+        "context": [],
+        "constants": []
+      },
+      "location": {
+        "start": {
+          "line": 4,
+          "column": 0,
+          "index": 59
+        },
+        "end": {
+          "line": 16,
+          "column": 1,
+          "index": 331
+        }
+      }
+    }
+  ]
 }
 ```
+
 
 ## Get Started
 
