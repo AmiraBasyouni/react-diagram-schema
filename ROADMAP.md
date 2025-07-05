@@ -29,8 +29,8 @@ Extract meaningful metadata from React components and output it as structured JS
 - [x] Traverse AST with `@babel/traverse`
 - [x] Extract component name and top-level logic
 - [x] Extract internal states and functions
-- [ ] Extract external props, children, context
-- [ ] Output file-level schema with all component metadata
+- [x] Extract external props, children, context
+- [x] Output file-level schema with all component metadata
 
 
 ### ⚠️ Note on Constants
