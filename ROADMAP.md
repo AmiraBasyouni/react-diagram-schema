@@ -8,13 +8,42 @@ This file outlines the phases and tasks for building the `react-diagram-schema` 
 
 Extract meaningful metadata from React components and output it as structured JSON.
 
+### Output Schema Format
+```js
+{
+  filename: '',
+  components: [
+    {
+      name: '',
+      description: '',
+      internal: { states: [], functions: [] },
+      external: { props: [], context: [], constants: [] },
+      location: null
+    }
+  ]
+}
+```
+
 ### Goals:
 - [x] Parse React code using `@babel/parser`
 - [x] Traverse AST with `@babel/traverse`
-- [x] Identify component name and logic
-- [x] Extract internal state and functions
-- [ ] Extract external props, children, hooks
-- [ ] Output JSON schema for each component
+- [x] Extract component name and top-level logic
+- [x] Extract internal states and functions
+- [ ] Extract external props, children, context
+- [ ] Output file-level schema with all component metadata
+
+
+### ⚠️ Note on Constants
+
+The `constants` array will be skipped in the MVP.  
+Support for per-file constant extraction (whether declared or imported) will be added **post-MVP**, when multi-file parsing is introduced.  
+This will allow the schema to track constants at the **file level**, independent of any specific component.
+
+### ⚠️ Note on Component Description
+
+The description field (e.g., developer-authored comments like "Renders Form UI") will be skipped in the MVP.
+Support for extracting this metadata will be added post-MVP, once parsing of inline comments is introduced.
+This will allow the schema to capture each component's intended purpose in human-readable form, improving clarity and usefulness in diagrams.
 
 ---
 
