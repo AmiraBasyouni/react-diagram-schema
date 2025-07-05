@@ -1,0 +1,35 @@
+{
+  "filename": "AppPlayground.js",
+  "components": [
+    {
+      "name": "App",
+      "description": "",
+      "internal": {
+        "states": [
+          [
+            "count",
+            "setCount"
+          ]
+        ],
+        "functions": []
+      },
+      "external": {
+        "props": [],
+        "context": [],
+        "constants": []
+      },
+      "location": {
+        "start": {
+          "line": 4,
+          "column": 0,
+          "index": 59
+        },
+        "end": {
+          "line": 16,
+          "column": 1,
+          "index": 331
+        }
+      }
+    }
+  ]
+}
