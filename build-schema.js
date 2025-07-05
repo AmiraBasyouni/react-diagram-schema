@@ -1,37 +1,55 @@
 #!/usr/bin/env node
 
+// imports
 const parser = require("@babel/parser");
 const traverse = require("@babel/traverse").default;
-//const t = require("@babel/types");
+const readSourceFile = require("./readSourceFile");
+const generateSchemaFile = require("./generateSchema");
 
-const schema = [];
+// project setup
+const inputFile = process.argv[2];
+const { code, filename } = readSourceFile(inputFile);
 
-/* Schema should end up looking like the following
+const schema = {
+  filename,
+  components: [],
+};
+
+/* Build a schema with the following structure
  *
  * const schema = {
- *   name: "",
- *   internal: { states: [], functions: [], },
- *   external: { variables: [], functions: []},
- *   location: null };
- *
- * currently, I have ommited external for simplicity
- * but ultimately, external also needs to be implemented
+ *   filename: "fileName.js"
+ *   components: [
+ *     {
+ *       name: "",
+ *       internal: { states: [], functions: [], },
+ *       external: { props: [], context: [], constants: [] },
+ *       location: null
+ *     }
+ *   ]
+ * };
  */
 
-const code = `function MyComponent() {
+/* CODE DEBUGGER!!
+const code = `function MyComponent({ children, propA, propB, propC }) {
   const [count, setCount] = useState(0);
-  const [time, setTime] = useState(0);
+  const [theme, setTheme] = React.useState("");
+  const favouriteColor = React.useContext(FavouriteColorContext);
+  const {theme1, theme2} = React.useContext(FavouriteTheme);
   function A(){}
   function B(){function C(){}}
   return <div>{count}</div>;
 }
 `;
+*/
 
+// ast @babel/parser
 const ast = parser.parse(code, {
   plugins: ["jsx", "typescript"],
   sourceType: "module",
 });
 
+// ast @babel/traverse
 traverse(ast, {
   // In every parsed file, the top-level node of the AST is always a program node
   // There is only one program per file
@@ -49,9 +67,13 @@ traverse(ast, {
     components.forEach((component) => {
       const obj = {
         name: "",
+        description: "",
         internal: { states: [], functions: [] },
+        external: { props: [], context: [], constants: [] },
         location: null,
       };
+
+      //--INTERNAL STRUCTURE -----------------------------
 
       //EXTRACT name AND location
       obj.name = component.id.name;
@@ -67,14 +89,26 @@ traverse(ast, {
       const component_VarDeclarations = component.body.body.filter(
         (node) => node.type === "VariableDeclaration",
       );
-      // helper function that extracts state VariableDeclarators from a VariableDeclaration
-      const isStateVariable = (node) =>
+
+      // helper functions to verify node path and state variable
+      const isValidPath = (node) =>
         node.type === "VariableDeclarator" &&
-        node.init.type === "CallExpression" &&
-        node.init.callee.name === "useState";
+        node.init.type === "CallExpression";
+      const isStateVariable = (node, reactHook) => {
+        if (node.init.callee.type === "Identifier") {
+          return node.init.callee.name === reactHook; // useState | useContext
+        } else if (node.init.callee.type === "MemberExpression") {
+          return node.init.callee.property.name === reactHook; // useState | useContext
+        } else {
+          return false;
+        }
+      };
       // helper variable that stores the extracted state declarators
       const state_declarators = component_VarDeclarations.flatMap(
-        (declaration) => declaration.declarations.filter(isStateVariable),
+        (declaration) =>
+          declaration.declarations.filter(
+            (node) => isValidPath(node) && isStateVariable(node, "useState"),
+          ),
       );
       //EXTRACT internal states -> [ ["a", "setA"], ["b", "setB"], ... ]
       const state_values = state_declarators.map((declarator) =>
@@ -82,18 +116,44 @@ traverse(ast, {
       );
       obj.internal.states = state_values;
 
+      //--EXTERNAL STRUCTURE -----------------------------
+      // helper variable: extract component props
+      const component_props =
+        component.params.length > 0 ? component.params[0].properties : [];
+
+      //EXTRACT PROPS
+      obj.external.props = component_props?.map((object) => object.key.name);
+
+      // helper variable to store useContext declarators
+      const context_declarators = component_VarDeclarations.flatMap(
+        (declaration) =>
+          declaration.declarations.filter(
+            (node) => isValidPath(node) && isStateVariable(node, "useContext"),
+          ),
+      );
+      //EXTRACT external context `source` and `values` -> [{ source: "ContextName", values: [value1, value2, ...]}, ....]
+      const context = [];
+      context_declarators.forEach((declarator) => {
+        const source = declarator.init.arguments[0].name;
+        const values = [];
+        if (declarator.id.type === "Identifier") {
+          values.push(declarator.id.name);
+        } else if (declarator.id.type === "ObjectPattern") {
+          declarator.id.properties.forEach((objectProperty) =>
+            values.push(objectProperty.key.name),
+          );
+        }
+        context.push({ source, values });
+      });
+      obj.external.context = context;
+
       // APPEND COMPONENT-LOGIC TO SCHEMA
-      schema.push(obj);
+      schema.components.push(obj);
     });
-
-    // const customHooks = program_body.filter(
-    // (node) =>
-    // node.type === "FunctionDeclaration" &&
-    // /^use[A-Z0-9].*/.test(node.id.name),
-    // );
-
-    //console.log(t.isFunctionDeclaration(components));
   },
 });
 
-console.dir(schema, { depth: null, colors: true });
+// OUTPUT DEBUGGER!!
+//console.dir(schema, { depth: null, colors: true });
+
+generateSchemaFile(schema);
