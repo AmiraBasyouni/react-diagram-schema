@@ -2,6 +2,9 @@
 
 Turn React components into a structured schema you can use to generate diagrams.
 
+**📌 Status:** 
+Actively developed. MVP in progress. Feedback welcome!
+
 ## What It Does
 
 Parses `.js`, `.jsx`, `.ts`, or `.tsx` files to extract React component logic, state, props, and other metadata into a clean JSON schema.
