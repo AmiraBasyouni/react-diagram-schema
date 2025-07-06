@@ -67,7 +67,7 @@ npm install
 build the schema using:
 
 ```bash
-node build-schema.js ../test-components/AppPlayground.js
+node src/build-schema.js /test-components/AppPlayground.js
 ```
 
 or, if installed globally, using: 
