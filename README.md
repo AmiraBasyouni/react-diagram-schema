@@ -11,6 +11,7 @@ Parses `.js`, `.jsx`, `.ts`, or `.tsx` files to extract React component logic, s
 Input: `AppPlayground.js`
 
 Output Schema:
+
 ```json
 {
   "filename": "AppPlayground.js",
@@ -49,7 +50,6 @@ Output Schema:
 }
 ```
 
-
 ## Get Started
 
 ```bash
@@ -65,12 +65,15 @@ npm install
 ```
 
 build the schema using:
+
 ```bash
-node build-schema.js
+node build-schema.js ../test-components/AppPlayground.js
 ```
+
 or, if installed globally, using: 
+
 ```bash
-npx build-schema
+npx build-schema ./fileName.js
 ```
 
 ## Roadmap
