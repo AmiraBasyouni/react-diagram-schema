@@ -53,7 +53,7 @@ Output Schema:
 ## Get Started
 
 ```bash
-git clone https://github.com/yourusername/react-diagram-schema
+git clone https://github.com/AmiraBasyouni/react-diagram-schema
 ```
 
 ```bash

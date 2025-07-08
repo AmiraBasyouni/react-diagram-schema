@@ -1,6 +1,6 @@
 {
   "name": "react-diagram-schema",
-  "version": "1.0.0",
+  "version": "0.1.1",
   "description": "Takes React components as input and returns a schema as output.",
   "main": "build-schema.js",
   "scripts": {
