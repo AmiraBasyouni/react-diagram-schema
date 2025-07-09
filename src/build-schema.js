@@ -68,6 +68,7 @@ traverse(ast, {
       const obj = {
         name: "",
         description: "",
+        descendants: [],
         internal: { states: [], functions: [] },
         external: { props: [], context: [], constants: [] },
         location: null,
@@ -156,6 +157,37 @@ traverse(ast, {
       });
       obj.external.context = context;
 
+      // helper variable: extract component's return statement
+      const component_returnStatementPath = componentPath
+        .get("body")
+        .get("body")
+        .filter((path) => path.isReturnStatement());
+
+      //EXTRACT component descendents
+      const descendants = new Set();
+      component_returnStatementPath.forEach((returnStatement) =>
+        returnStatement.get("argument").traverse({
+          JSXElement(childPath) {
+            const opening = childPath.node.openingElement;
+
+            // Handle cases like <Some.Component>
+            let tagName = "";
+            if (opening.name.type === "JSXIdentifier") {
+              tagName = opening.name.name;
+            } else if (opening.name.type === "JSXMemberExpression") {
+              // Get only the rightmost name (e.g., Some.Component -> "Component")
+              tagName = opening.name.property.name;
+            }
+
+            // Only add component-like elements (capitalized, not HTML tags)
+            if (tagName && /^[A-Z]/.test(tagName)) {
+              descendants.add(tagName);
+            }
+          },
+        }),
+      );
+      obj.descendants = Array.from(descendants);
+
       //APPEND COMPONENT-LOGIC TO SCHEMA
       schema.components.push(obj);
     });
@@ -163,7 +195,7 @@ traverse(ast, {
 });
 
 // OUTPUT TO CONSOLE!!
-console.dir(schema, { depth: null, colors: true });
+//console.dir(schema, { depth: null, colors: true });
 
 // OUTPUT TO FILE
-//generateSchemaFile(schema);
+generateSchemaFile(schema);
