@@ -164,7 +164,7 @@ traverse(ast, {
         .filter((path) => path.isReturnStatement());
 
       //EXTRACT component descendents
-      const descendants = new Set();
+      const descendantsMap = new Map();
       component_returnStatementPath.forEach((returnStatement) =>
         returnStatement.get("argument").traverse({
           JSXElement(childPath) {
@@ -181,12 +181,20 @@ traverse(ast, {
 
             // Only add component-like elements (capitalized, not HTML tags)
             if (tagName && /^[A-Z]/.test(tagName)) {
-              descendants.add(tagName);
+              descendantsMap.set(tagName, {
+                sourceFile: filename,
+                location: {
+                  line: childPath.node.loc.start.line,
+                  column: childPath.node.loc.start.column,
+                },
+              });
             }
           },
         }),
       );
-      obj.descendants = Array.from(descendants);
+      obj.descendants = Array.from(descendantsMap.entries()).map(
+        ([name, metadata]) => ({ name, ...metadata }),
+      );
 
       //APPEND COMPONENT-LOGIC TO SCHEMA
       schema.components.push(obj);
@@ -195,7 +203,7 @@ traverse(ast, {
 });
 
 // OUTPUT TO CONSOLE!!
-//console.dir(schema, { depth: null, colors: true });
+console.dir(schema, { depth: null, colors: true });
 
 // OUTPUT TO FILE
 generateSchemaFile(schema);
