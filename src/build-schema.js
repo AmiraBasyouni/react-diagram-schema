@@ -54,17 +54,17 @@ traverse(ast, {
   // In every parsed file, the top-level node of the AST is always a program node
   // There is only one program per file
   Program(path) {
-    const program_body = path.node.body;
+    const program_bodyPath = path.get("body");
 
-    // helper function to extract React components from the program
-    const isReactComponent = (node) =>
-      node.type === "FunctionDeclaration" && /^[A-Z]/.test(node.id.name);
+    // helper function: filter to select React components in the program
+    const isReactComponent = (path) =>
+      path.isFunctionDeclaration() && /^[A-Z]/.test(path.node.id.name);
 
-    //REACT-COMPONENTS
-    const components = program_body.filter(isReactComponent);
+    //EXTRACT REACT-COMPONENTS
+    const componentsPath = program_bodyPath.filter(isReactComponent);
 
     //EXTRACT { name: "", internal: {states: [], functions: []}, location: null } FROM EACH REACT COMPONENT
-    components.forEach((component) => {
+    componentsPath.forEach((componentPath) => {
       const obj = {
         name: "",
         description: "",
@@ -76,70 +76,79 @@ traverse(ast, {
       //--INTERNAL STRUCTURE -----------------------------
 
       //EXTRACT name AND location
-      obj.name = component.id.name;
-      obj.location = component.loc;
+      obj.name = componentPath.node.id.name;
+      obj.location = componentPath.node.loc;
 
-      //EXTRACT internal functions -> [ "func1", "func2", ... ]
-      obj.internal.functions = component.body.body
-        .filter((node) => node.type === "FunctionDeclaration")
-        .map((fn) => fn.id?.name) // access name if it exists
+      //EXTRACT internal functions from a React Component -> [ "func1", "func2", ... ]
+      obj.internal.functions = componentPath
+        .get("body")
+        .get("body")
+        .filter((path) => path.isFunctionDeclaration())
+        .map((fn) => fn.node.id?.name) // access name if it exists
         .filter(Boolean); // filter out any undefined or null names
 
-      // helper variable that extracts VariableDeclarations from a React component
-      const component_VarDeclarations = component.body.body.filter(
-        (node) => node.type === "VariableDeclaration",
-      );
+      // helper variable: extract VariableDeclarations from a React component
+      const component_VarDeclarations = componentPath
+        .get("body")
+        .get("body")
+        .filter((path) => path.isVariableDeclaration());
 
-      // helper functions to verify node path and state variable
-      const isValidPath = (node) =>
-        node.type === "VariableDeclarator" &&
-        node.init.type === "CallExpression";
-      const isStateVariable = (node, reactHook) => {
-        if (node.init.callee.type === "Identifier") {
-          return node.init.callee.name === reactHook; // useState | useContext
-        } else if (node.init.callee.type === "MemberExpression") {
-          return node.init.callee.property.name === reactHook; // useState | useContext
+      // helper functions: verify node path and valid state variable
+      const isValidPath = (path) =>
+        path.isVariableDeclarator() && path.get("init").isCallExpression();
+      const isStateVariable = (path, reactHook) => {
+        if (path.get("init").get("callee").isIdentifier()) {
+          return path.node.init.callee.name === reactHook; // useState | useContext
+        } else if (path.get("init").get("callee").isMemberExpression()) {
+          return path.node.init.callee.property.name === reactHook; // useState | useContext
         } else {
           return false;
         }
       };
-      // helper variable that stores the extracted state declarators
+      // helper variable: extract state declarators from VariableDeclarations
       const state_declarators = component_VarDeclarations.flatMap(
-        (declaration) =>
-          declaration.declarations.filter(
-            (node) => isValidPath(node) && isStateVariable(node, "useState"),
-          ),
+        (declarationPath) =>
+          declarationPath
+            .get("declarations")
+            .filter(
+              (path) => isValidPath(path) && isStateVariable(path, "useState"),
+            ),
       );
-      //EXTRACT internal states -> [ ["a", "setA"], ["b", "setB"], ... ]
+      //EXTRACT internally defined states -> [ ["a", "setA"], ["b", "setB"], ... ]
       const state_values = state_declarators.map((declarator) =>
-        declarator.id.elements.map((element) => element.name),
+        declarator.node.id.elements.map((element) => element.name),
       );
       obj.internal.states = state_values;
 
       //--EXTERNAL STRUCTURE -----------------------------
-      // helper variable: extract component props
+      // helper variable: filter component props from a component's parameter list
       const component_props =
-        component.params.length > 0 ? component.params[0].properties : [];
+        componentPath.node.params.length > 0
+          ? componentPath.node.params[0].properties
+          : [];
 
-      //EXTRACT PROPS
+      //EXTRACT externally defined props -> ["propA", "propB", "propC", ...]
       obj.external.props = component_props?.map((object) => object.key.name);
 
-      // helper variable to store useContext declarators
+      // helper variable: extract useContext declarators
       const context_declarators = component_VarDeclarations.flatMap(
-        (declaration) =>
-          declaration.declarations.filter(
-            (node) => isValidPath(node) && isStateVariable(node, "useContext"),
-          ),
+        (declarationPath) =>
+          declarationPath
+            .get("declarations")
+            .filter(
+              (path) =>
+                isValidPath(path) && isStateVariable(path, "useContext"),
+            ),
       );
-      //EXTRACT external context `source` and `values` -> [{ source: "ContextName", values: [value1, value2, ...]}, ....]
+      //EXTRACT externally defined context `source` and `values` -> [{ source: "ContextName", values: [value1, value2, ...]}, ....]
       const context = [];
-      context_declarators.forEach((declarator) => {
-        const source = declarator.init.arguments[0].name;
+      context_declarators.forEach((declaratorPath) => {
+        const source = declaratorPath.node.init.arguments[0].name;
         const values = [];
-        if (declarator.id.type === "Identifier") {
-          values.push(declarator.id.name);
-        } else if (declarator.id.type === "ObjectPattern") {
-          declarator.id.properties.forEach((objectProperty) =>
+        if (declaratorPath.get("id").isIdentifier()) {
+          values.push(declaratorPath.node.id.name);
+        } else if (declaratorPath.get("id").isObjectPattern()) {
+          declaratorPath.node.id.properties.forEach((objectProperty) =>
             values.push(objectProperty.key.name),
           );
         }
@@ -147,13 +156,14 @@ traverse(ast, {
       });
       obj.external.context = context;
 
-      // APPEND COMPONENT-LOGIC TO SCHEMA
+      //APPEND COMPONENT-LOGIC TO SCHEMA
       schema.components.push(obj);
     });
   },
 });
 
-// OUTPUT DEBUGGER!!
-//console.dir(schema, { depth: null, colors: true });
+// OUTPUT TO CONSOLE!!
+console.dir(schema, { depth: null, colors: true });
 
-generateSchemaFile(schema);
+// OUTPUT TO FILE
+//generateSchemaFile(schema);
