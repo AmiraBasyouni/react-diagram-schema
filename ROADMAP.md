@@ -16,6 +16,7 @@ Extract meaningful metadata from React components and output it as structured JS
     {
       name: '',
       description: '',
+      descendants: [],
       internal: { states: [], functions: [] },
       external: { props: [], context: [], constants: [] },
       location: null
@@ -31,7 +32,7 @@ Extract meaningful metadata from React components and output it as structured JS
 - [x] Extract internal states and functions
 - [x] Extract external props, children, context
 - [x] Output file-level schema with all component metadata
-
+- [x] Extract descendants (will be used to infer component hierarchy in [react-diagram-visualizer](https://github.com/AmiraBasyouni/react-diagram-visualizer))
 
 ### ⚠️ Note on Constants
 
@@ -47,11 +48,8 @@ This will allow the schema to capture each component's intended purpose in human
 
 ---
 
-## Phase 2: Schema to Visual Diagram (via `react-diagram-visualizer`)
-
-Use the schema output to generate a diagram using [React Flow](https://reactflow.dev/).
-
-> This will live in a separate repo: `react-diagram-visualizer`.
+## Near-Term Goals (Schema Refinement)
+- [ ] Refactor `build-schema.js` logic and add inline comments to improve code readability and maintainability
 
 ---
 
