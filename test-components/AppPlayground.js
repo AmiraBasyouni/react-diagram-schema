@@ -1,9 +1,15 @@
 import React from "react";
-import Header from "./Header";
-import Content from "./Content";
 
 import FavouriteColorContext from "./FavouriteColorProvider";
 import FavouriteThemeContext from "./FavouriteThemeProvider";
+
+function Header() {
+  return <div></div>;
+}
+
+function Content() {
+  return <p></p>;
+}
 
 function App({ children, propA, propB, propC }) {
   const [count, setCount] = React.useState(0);
