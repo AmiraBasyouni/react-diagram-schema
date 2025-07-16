@@ -7,7 +7,6 @@ Turn React components into a structured schema you can use to generate diagrams.
 - Parses React source files (`.js`, `.jsx`) using `@babel/parser` and `@babel/traverse`.
 
 - Extracts component-level data:
-
   - State variables (e.g., `useState` pairs)
   - Props usage
   - Context dependencies
@@ -31,78 +30,58 @@ Output Schema:
   "filename": "AppPlayground.js",
   "components": [
     {
+      "name": "Header",
+      "description": "",
+      "descendants": [],
+      "internal": { "states": [], "functions": [] },
+      "external": { "props": [], "context": [], "constants": [] },
+      "location": { "line": 6 }
+    },
+    {
+      "name": "Content",
+      "description": "",
+      "descendants": [],
+      "internal": { "states": [], "functions": [] },
+      "external": { "props": [], "context": [], "constants": [] },
+      "location": { "line": 10 }
+    },
+    {
       "name": "App",
       "description": "",
       "descendants": [
         {
           "name": "Header",
           "sourceFile": "AppPlayground.js",
-          "location": {
-            "line": 28,
-            "column": 6
-          }
+          "location": { "line": 6 }
         },
         {
           "name": "Content",
           "sourceFile": "AppPlayground.js",
-          "location": {
-            "line": 33,
-            "column": 8
-          }
+          "location": { "line": 10 }
         }
       ],
       "internal": {
         "states": [
-          [
-            "count",
-            "setCount"
-          ],
-          [
-            "theme",
-            "setTheme"
-          ]
+          ["count", "setCount"],
+          ["theme", "setTheme"]
         ],
-        "functions": [
-          "buttonHandler",
-          "B"
-        ]
+        "functions": ["buttonHandler", "B"]
       },
       "external": {
-        "props": [
-          "children",
-          "propA",
-          "propB",
-          "propC"
-        ],
+        "props": ["children", "propA", "propB", "propC"],
         "context": [
           {
             "source": "FavouriteColorContext",
-            "values": [
-              "favouriteColor"
-            ]
+            "values": ["favouriteColor"]
           },
           {
             "source": "FavouriteThemeContext",
-            "values": [
-              "theme1",
-              "theme2"
-            ]
+            "values": ["theme1", "theme2"]
           }
         ],
         "constants": []
       },
-      "location": {
-        "start": {
-          "line": 8,
-          "column": 0,
-          "index": 217
-        },
-        "end": {
-          "line": 37,
-          "column": 1,
-          "index": 1023
-        }
-      }
+      "location": { "line": 14 }
     }
   ]
 }
@@ -128,7 +107,7 @@ build the schema using:
 node src/build-schema.js test-components/AppPlayground.js
 ```
 
-or, if installed globally, using: 
+or, if installed globally, using:
 
 ```bash
 npx build-schema ./fileName.js
