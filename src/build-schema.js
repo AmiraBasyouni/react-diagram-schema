@@ -15,6 +15,9 @@ const schema = {
   components: [],
 };
 
+// array to collect warnings related to insufficient data
+const warnings = [];
+
 /* Build a schema with the following structure
  *
  * const schema = {
@@ -30,7 +33,7 @@ const schema = {
  * };
  */
 
-/* CODE DEBUGGER!!
+/* A TEST-COMPONENT FOR DEBUGGING SCHEMA!!
 const code = `function MyComponent({ children, propA, propB, propC }) {
   const [count, setCount] = useState(0);
   const [theme, setTheme] = React.useState("");
@@ -78,7 +81,9 @@ traverse(ast, {
 
       //EXTRACT name AND location
       obj.name = componentPath.node.id.name;
-      obj.location = componentPath.node.loc;
+      obj.location = {
+        line: componentPath.node?.loc.start.line,
+      };
 
       //EXTRACT internal functions from a React Component -> [ "func1", "func2", ... ]
       obj.internal.functions = componentPath
@@ -181,11 +186,21 @@ traverse(ast, {
 
             // Only add component-like elements (capitalized, not HTML tags)
             if (tagName && /^[A-Z]/.test(tagName)) {
+              const descendantLocation = componentsPath.filter(
+                (component) => component.node.id.name === tagName,
+              )[0]?.node.loc;
+              if (
+                !descendantLocation?.start.line ||
+                typeof descendantLocation?.start.line !== "number"
+              ) {
+                warnings.push(
+                  `⚠️  WARNING descendant '${tagName}' has a location that is invalid or unresolved. Check if the component is defined or only imported.`,
+                );
+              }
               descendantsMap.set(tagName, {
                 sourceFile: filename,
                 location: {
-                  line: childPath.node.loc.start.line,
-                  column: childPath.node.loc.start.column,
+                  line: descendantLocation?.start.line,
                 },
               });
             }
@@ -204,6 +219,7 @@ traverse(ast, {
 
 // OUTPUT TO CONSOLE!!
 console.dir(schema, { depth: null, colors: true });
+warnings.forEach((warning) => console.warn(warning));
 
 // OUTPUT TO FILE
 generateSchemaFile(schema);
