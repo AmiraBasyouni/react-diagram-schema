@@ -4,12 +4,12 @@
   "description": "Takes React components as input and returns a schema as output.",
   "main": "build-schema.js",
   "scripts": {
-    "build": "node build-schema.js",
+    "build-schema": "node ./src/build-schema.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "commit": "./scripts/generate-commit-msg.sh"
   },
   "bin": {
-    "build-schema": "./build-schema.js"
+    "build-schema": "./src/build-schema.js"
   },
   "repository": {
     "type": "git",
