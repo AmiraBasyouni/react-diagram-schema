@@ -3,14 +3,6 @@ import React from "react";
 import FavouriteColorContext from "./FavouriteColorProvider";
 import FavouriteThemeContext from "./FavouriteThemeProvider";
 
-function Header() {
-  return <div></div>;
-}
-
-function Content() {
-  return <p></p>;
-}
-
 function App({ children, propA, propB, propC }) {
   const [count, setCount] = React.useState(0);
   const [theme, setTheme] = React.useState("");
@@ -40,6 +32,14 @@ function App({ children, propA, propB, propC }) {
       </main>
     </>
   );
+}
+
+function Header() {
+  return <div></div>;
+}
+
+function Content() {
+  return <p></p>;
 }
 
 // later, we'd like to test different component forms:
