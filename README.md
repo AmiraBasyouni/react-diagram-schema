@@ -1,93 +1,9 @@
 # react-diagram-schema
 
-Turn React components into a structured schema you can use to generate diagrams.
+`react-diagram-schema` is a CLI tool that take a React source code file and turns it into a structured schema. 
+The schema can be handed to [react-diagram-visualizer](https://github.com/AmiraBasyouni/react-diagram-visualizer) to generate a visual diagram of your components.
 
-## Details
-
-- Parses React source files (`.js`, `.jsx`) using `@babel/parser` and `@babel/traverse`.
-
-- Extracts component-level data:
-  - State variables (e.g., `useState` pairs)
-  - Props usage
-  - Context dependencies
-  - Function declarations
-  - (Plus source file name and location metadata — line/column)
-
-- Generates a standardized JSON schema describing your app’s structure
-
-- Integrates seamlessly with [react-diagram-visualizer](https://github.com/AmiraBasyouni/react-diagram-visualizer) to visualize component hierarchies and relationships
-
-- Versatile schema output — the JSON can power other tools or workflows; feel free to reuse it however you like
-
-## Example
-
-Input: `AppPlayground.js`
-
-Output Schema:
-
-```json
-{
-  "filename": "AppPlayground.js",
-  "components": [
-    {
-      "name": "Header",
-      "description": "",
-      "descendants": [],
-      "internal": { "states": [], "functions": [] },
-      "external": { "props": [], "context": [], "constants": [] },
-      "location": { "line": 6 }
-    },
-    {
-      "name": "Content",
-      "description": "",
-      "descendants": [],
-      "internal": { "states": [], "functions": [] },
-      "external": { "props": [], "context": [], "constants": [] },
-      "location": { "line": 10 }
-    },
-    {
-      "name": "App",
-      "description": "",
-      "descendants": [
-        {
-          "name": "Header",
-          "sourceFile": "AppPlayground.js",
-          "location": { "line": 6 }
-        },
-        {
-          "name": "Content",
-          "sourceFile": "AppPlayground.js",
-          "location": { "line": 10 }
-        }
-      ],
-      "internal": {
-        "states": [
-          ["count", "setCount"],
-          ["theme", "setTheme"]
-        ],
-        "functions": ["buttonHandler", "B"]
-      },
-      "external": {
-        "props": ["children", "propA", "propB", "propC"],
-        "context": [
-          {
-            "source": "FavouriteColorContext",
-            "values": ["favouriteColor"]
-          },
-          {
-            "source": "FavouriteThemeContext",
-            "values": ["theme1", "theme2"]
-          }
-        ],
-        "constants": []
-      },
-      "location": { "line": 14 }
-    }
-  ]
-}
-```
-
-## Get Started
+## Installation
 
 ```bash
 git clone https://github.com/AmiraBasyouni/react-diagram-schema
@@ -101,17 +17,157 @@ cd react-diagram-schema
 npm install
 ```
 
-build the schema using:
-
+## Usage
+**when installed locally,**    
+generate the schema of a test-component file using:
 ```bash
-node src/build-schema.js test-components/AppPlayground.js
+npm run build-schema ./test-components/AppPlayground.js
+```
+or using:
+```bash
+npx build-schema ./test-components/AppPlayground.js
 ```
 
-or, if installed globally, using:
 
+**when installed globally,**   
+generate the schema of any component file using:
 ```bash
-npx build-schema ./fileName.js
+npx build-schema ./MyComponent.js
 ```
+*remember to replace MyComponent with the name of your file*
+
+## Example
+
+Input: `AppPlayground.js`
+
+Outputs a schema.json file containing:
+
+```json
+{
+  "App": {
+    "name": "App",
+    "description": "",
+    "descendants": [
+      {
+        "name": "Header",
+        "sourceFile": "AppPlayground.js",
+        "location": {
+          "line": 37,
+          "filename": "AppPlayground.js",
+          "filepath": "./"
+        }
+      },
+      {
+        "name": "Content",
+        "sourceFile": "AppPlayground.js",
+        "location": {
+          "line": 41,
+          "filename": "AppPlayground.js",
+          "filepath": "./"
+        }
+      }
+    ],
+    "internal": {
+      "states": [
+        [
+          "count",
+          "setCount"
+        ],
+        [
+          "theme",
+          "setTheme"
+        ]
+      ],
+      "functions": [
+        "buttonHandler",
+        "B"
+      ]
+    },
+    "external": {
+      "props": [
+        "children",
+        "propA",
+        "propB",
+        "propC"
+      ],
+      "context": [
+        {
+          "source": "FavouriteColorContext",
+          "values": [
+            "favouriteColor"
+          ]
+        },
+        {
+          "source": "FavouriteThemeContext",
+          "values": [
+            "theme1",
+            "theme2"
+          ]
+        }
+      ],
+      "constants": []
+    },
+    "location": {
+      "line": 6,
+      "filename": "AppPlayground.js",
+      "filepath": "./"
+    }
+  },
+  "Header": {
+    "name": "Header",
+    "description": "",
+    "descendants": [],
+    "internal": {
+      "states": [],
+      "functions": []
+    },
+    "external": {
+      "props": [],
+      "context": [],
+      "constants": []
+    },
+    "location": {
+      "line": 37,
+      "filename": "AppPlayground.js",
+      "filepath": "./"
+    }
+  },
+  "Content": {
+    "name": "Content",
+    "description": "",
+    "descendants": [],
+    "internal": {
+      "states": [],
+      "functions": []
+    },
+    "external": {
+      "props": [],
+      "context": [],
+      "constants": []
+    },
+    "location": {
+      "line": 41,
+      "filename": "AppPlayground.js",
+      "filepath": "./"
+    }
+  }
+}
+```
+
+## Implementation Details
+
+- Parses a React source file (`.js`, `.jsx`) using `@babel/parser` and `@babel/traverse`.
+
+- Extracts component-level data:
+  - states and state setters
+  - props
+  - context dependencies
+  - function declarations
+  - source filename and declaration line
+
+- Generates a standardized JSON schema describing your app’s structure
+
+- Versatile schema output — the JSON can power other tools or workflows; feel free to reuse it however you like
 
 ## Roadmap
 
