@@ -100,8 +100,8 @@ while (stack.length > 0) {
         });
       }
     });
-    /* clear unresolvedDescendants */
-    component.unresolvedDescendants = [];
+    /* clear and hide unresolvedDescendants from JSON file output */
+    component.unresolvedDescendants = undefined;
     // transform component descendants from type Map to type Array
     component.descendants = Array.from(component.descendants.entries()).map(
       ([name, metadata]) => `${name}::${metadata.location.filepath}`,
