@@ -4,10 +4,10 @@ const path = require("path");
 
 function generateSchemaFile(
   schema,
-  outputDirName = "../public",
+  outputDirName = "./",
   outputFileName = "schema.json",
 ) {
-  const outputDir = path.join(__dirname, outputDirName);
+  const outputDir = path.join(process.cwd(), outputDirName);
 
   if (!fs.existsSync(outputDir)) {
     fs.mkdirSync(outputDir, { recursive: true });

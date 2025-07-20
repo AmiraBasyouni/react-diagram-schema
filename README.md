@@ -19,34 +19,39 @@ npm install
 
 ## Usage
 
-**when installed locally,**  
-generate the schema of the test components application using:
+**to try it without installing,**   
+generate the schema from any directory using:
 
 ```bash
-npm run build-schema ./test-components/ App
+npx AmiraBasyouni/react-diagram-schema ./src/ App
 ```
 
-or using:
+_replace `./src/` with your application's entry directory._   
+_`App` represents the entry component living in your entry directory._
+
+**if installed locally,**  
+generate the test schema within `react-diagram-schema`'s root folder using:
 
 ```bash
-npx build-schema ./test-components/ App
+./src/build-schema ./test-components/ App
 ```
 
-**when installed globally,**  
-generate the schema of any component file using:
+**if installed globally,**  
+generate the schema from any directory using:
 
 ```bash
 npx build-schema ./src/ App
 ```
-
-_replace ./src/ with your application's entry directory_
-_App represents your entry component living in your entry directory_
+_replace `./src/` with your application's entry directory._   
+_`App` represents the entry component living in your entry directory._
 
 ## Example
 
-Input: `./test-components/ App`
+**Scenario:** You have installed `react-diagram-schema` locally on your device. You are in the repository's root folder.   
 
-Outputs a schema.json file containing:
+**You run the command:** `./src/build-schema ./test-components/ App`
+
+**A schema.json file is created containing the following:**
 
 ```json
 {
