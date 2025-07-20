@@ -1,7 +1,7 @@
 # react-diagram-schema
 
-`react-diagram-schema` is a CLI tool that take a React source code file and turns it into a structured schema. 
-The schema can be handed to [react-diagram-visualizer](https://github.com/AmiraBasyouni/react-diagram-visualizer) to generate a visual diagram of your components.
+`react-diagram-schema` is a CLI tool that take a React source code directory and turns it into a structured schema.
+The schema can be handed to [react-diagram-visualizer](https://github.com/AmiraBasyouni/react-diagram-visualizer) to generate a visual diagram of your React application.
 
 ## Installation
 
@@ -18,121 +18,72 @@ npm install
 ```
 
 ## Usage
-**when installed locally,**    
-generate the schema of a test-component file using:
+
+**when installed locally,**  
+generate the schema of the test components application using:
+
 ```bash
-npm run build-schema ./test-components/AppPlayground.js
+npm run build-schema ./test-components/ App
 ```
+
 or using:
+
 ```bash
-npx build-schema ./test-components/AppPlayground.js
+npx build-schema ./test-components/ App
 ```
 
-
-**when installed globally,**   
+**when installed globally,**  
 generate the schema of any component file using:
+
 ```bash
-npx build-schema ./MyComponent.js
+npx build-schema ./src/ App
 ```
-*remember to replace MyComponent with the name of your file*
+
+_replace ./src/ with your application's entry directory_
+_App represents your entry component living in your entry directory_
 
 ## Example
 
-Input: `AppPlayground.js`
+Input: `./test-components/ App`
 
 Outputs a schema.json file containing:
 
 ```json
 {
-  "App": {
+  "App::../test-components/App.js": {
     "name": "App",
     "description": "",
     "descendants": [
-      {
-        "name": "Header",
-        "sourceFile": "AppPlayground.js",
-        "location": {
-          "line": 37,
-          "filename": "AppPlayground.js",
-          "filepath": "./"
-        }
-      },
-      {
-        "name": "Content",
-        "sourceFile": "AppPlayground.js",
-        "location": {
-          "line": 41,
-          "filename": "AppPlayground.js",
-          "filepath": "./"
-        }
-      }
+      "Header::../test-components/Header.js",
+      "Content::../test-components/App.js"
     ],
     "internal": {
       "states": [
-        [
-          "count",
-          "setCount"
-        ],
-        [
-          "theme",
-          "setTheme"
-        ]
+        ["count", "setCount"],
+        ["theme", "setTheme"]
       ],
-      "functions": [
-        "buttonHandler",
-        "B"
-      ]
+      "functions": ["buttonHandler", "B"]
     },
     "external": {
-      "props": [
-        "children",
-        "propA",
-        "propB",
-        "propC"
-      ],
+      "props": ["children", "propA", "propB", "propC"],
       "context": [
         {
           "source": "FavouriteColorContext",
-          "values": [
-            "favouriteColor"
-          ]
+          "values": ["favouriteColor"]
         },
         {
           "source": "FavouriteThemeContext",
-          "values": [
-            "theme1",
-            "theme2"
-          ]
+          "values": ["theme1", "theme2"]
         }
       ],
       "constants": []
     },
     "location": {
-      "line": 6,
-      "filename": "AppPlayground.js",
-      "filepath": "./"
+      "line": 7,
+      "filepath": "../test-components/App.js"
     }
   },
-  "Header": {
-    "name": "Header",
-    "description": "",
-    "descendants": [],
-    "internal": {
-      "states": [],
-      "functions": []
-    },
-    "external": {
-      "props": [],
-      "context": [],
-      "constants": []
-    },
-    "location": {
-      "line": 37,
-      "filename": "AppPlayground.js",
-      "filepath": "./"
-    }
-  },
-  "Content": {
+  "Content::../test-components/App.js": {
     "name": "Content",
     "description": "",
     "descendants": [],
@@ -146,9 +97,26 @@ Outputs a schema.json file containing:
       "constants": []
     },
     "location": {
-      "line": 41,
-      "filename": "AppPlayground.js",
-      "filepath": "./"
+      "line": 43,
+      "filepath": "../test-components/App.js"
+    }
+  },
+  "Header::../test-components/Header.js": {
+    "name": "Header",
+    "description": "",
+    "descendants": [],
+    "internal": {
+      "states": [],
+      "functions": []
+    },
+    "external": {
+      "props": [],
+      "context": [],
+      "constants": []
+    },
+    "location": {
+      "line": 3,
+      "filepath": "../test-components/Header.js"
     }
   }
 }
@@ -168,6 +136,8 @@ Outputs a schema.json file containing:
 - Generates a standardized JSON schema describing your app’s structure
 
 - Versatile schema output — the JSON can power other tools or workflows; feel free to reuse it however you like
+
+- Integrates seamlessly with [react-diagram-visualizer](https://github.com/AmiraBasyouni/react-diagram-visualizer) which generates a visual diagram of your application.
 
 ## Roadmap
 
