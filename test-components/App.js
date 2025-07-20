@@ -2,6 +2,7 @@ import React from "react";
 
 import FavouriteColorContext from "./FavouriteColorProvider";
 import FavouriteThemeContext from "./FavouriteThemeProvider";
+import Header from "./Header.js";
 
 function App({ children, propA, propB, propC }) {
   const [count, setCount] = React.useState(0);
@@ -33,10 +34,11 @@ function App({ children, propA, propB, propC }) {
     </>
   );
 }
-
+/*
 function Header() {
   return <div></div>;
 }
+*/
 
 function Content() {
   return <p></p>;
