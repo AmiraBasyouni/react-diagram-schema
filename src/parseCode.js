@@ -125,7 +125,15 @@ function parseCode(code, filepath) {
             : [];
 
         //EXTRACT externally defined props -> ["propA", "propB", "propC", ...]
-        obj.external.props = component_props?.map((object) => object.key.name);
+        obj.external.props = component_props?.map((object) => {
+          if (object.type === "ObjectProperty") {
+            //CASE: prop type is an ObjectProperty
+            return object.key.name;
+          } else if (object.type === "RestElement") {
+            // CASE: prop type is a RestElement
+            return `...${object.argument.name}`;
+          }
+        });
 
         // helper variable: extract useContext declarators
         const context_declarators = component_VarDeclarations.flatMap(
