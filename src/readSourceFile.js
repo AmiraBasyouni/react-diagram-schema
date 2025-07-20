@@ -11,7 +11,7 @@ function readSourceFile(inputPath) {
 
   try {
     const code = fs.readFileSync(absolutePath, "utf-8");
-    return { code, filename: path.basename(inputPath) };
+    return code;
   } catch (err) {
     console.error(`ERROR: Failed to read file: ${inputPath}\n`, err.message);
     process.exit(1);

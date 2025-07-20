@@ -1,6 +1,7 @@
 // imports
 const parser = require("@babel/parser");
 const traverse = require("@babel/traverse").default;
+const componentIsDeclaredInCode = require("./utils/componentIsDeclaredInCode");
 
 /* Build the following schema structure
  *
@@ -10,7 +11,7 @@ const traverse = require("@babel/traverse").default;
  *       name: ""
  *       internal: { states: [], functions: [], },
  *       external: { props: [], context: [], constants: [] },
- *       location: null
+ *       location: {line, filepath}
  *     }
  * };
  *
@@ -29,9 +30,9 @@ const code = `function MyComponent({ children, propA, propB, propC }) {
 `;
 */
 
-function parseCode(code, filename, filepath) {
+function parseCode(code, filepath) {
   // schema setup
-  const components = {};
+  const components = [];
 
   // ast @babel/parser
   const ast = parser.parse(code, {
@@ -62,6 +63,7 @@ function parseCode(code, filename, filepath) {
           internal: { states: [], functions: [] },
           external: { props: [], context: [], constants: [] },
           location: null,
+          unresolvedDescendants: [],
         };
 
         //--INTERNAL STRUCTURE -----------------------------
@@ -70,7 +72,6 @@ function parseCode(code, filename, filepath) {
         obj.name = componentPath.node.id.name;
         obj.location = {
           line: componentPath.node?.loc.start.line,
-          filename,
           filepath,
         };
 
@@ -176,9 +177,24 @@ function parseCode(code, filename, filepath) {
 
               // Only add component-like elements (capitalized, not HTML tags)
               if (tagName && /^[A-Z]/.test(tagName)) {
-                const descendantLocation = componentsPath.filter(
-                  (component) => component.node.id.name === tagName,
-                )[0]?.node.loc;
+                if (componentIsDeclaredInCode(code, tagName)) {
+                  // locate declaration line
+                  //const descendantLocation = componentsPath.filter(
+                  //  (component) => component.node.id.name === tagName,
+                  //)[0]?.node.loc;
+                  /* and record its declaration line */
+                  descendantsMap.set(tagName, {
+                    location: {
+                      //line: descendantLocation?.start.line,
+                      filepath,
+                    },
+                  });
+                } else {
+                  obj.unresolvedDescendants.push(tagName);
+                  descendantsMap.set(tagName, {
+                    location: {},
+                  });
+                }
                 /*if (
                   !descendantLocation?.start.line ||
                   typeof descendantLocation?.start.line !== "number"
@@ -187,24 +203,17 @@ function parseCode(code, filename, filepath) {
                   `⚠️  WARNING descendant '${tagName}' has a location that is invalid or unresolved. Check if the component is defined or only imported.`,
                 );
                 }*/
-                descendantsMap.set(tagName, {
-                  sourceFile: filename,
-                  location: {
-                    line: descendantLocation?.start.line,
-                    filename,
-                    filepath,
-                  },
-                });
               }
             },
           }),
         );
-        obj.descendants = Array.from(descendantsMap.entries()).map(
-          ([name, metadata]) => ({ name, ...metadata }),
-        );
+        obj.descendants = descendantsMap;
+        //obj.descendants = Array.from(descendantsMap.entries()).map(
+        //  ([name, metadata]) => ({ name, ...metadata }),
+        //);
 
         //APPEND COMPONENT-LOGIC TO SCHEMA
-        components[obj.name] = obj;
+        components.push(obj);
       });
     },
   });
