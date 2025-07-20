@@ -47,15 +47,24 @@ function parseCode(code, filepath) {
     Program(path) {
       const program_bodyPath = path.get("body");
 
+      /* include support for in-line function declarations (e.g. const ComponentName = () => ...) */
+      //const isInlineReactComponent = (path) =>
+      //  path.get("declarations")[0]?.init.type === "ArrowFunctionExpression" &&
+      //  /^[A-Z]/.test(path.node.id.name);
+
       // helper function: filter to select React components in the program
       const isReactComponent = (path) =>
         path.isFunctionDeclaration() && /^[A-Z]/.test(path.node.id.name);
 
       //EXTRACT REACT-COMPONENTS
-      const componentsPath = program_bodyPath.filter(isReactComponent);
+      const componentPaths = program_bodyPath.filter(isReactComponent);
+      /* extract in-line React Components */
+      //const inlineComponentPaths = program_bodyPath.filter(
+      //  isInlineReactComponent,
+      //);
 
       //EXTRACT { name: "", internal: {states: [], functions: []}, location: null } FROM EACH REACT COMPONENT
-      componentsPath.forEach((componentPath) => {
+      componentPaths.forEach((componentPath) => {
         const obj = {
           name: "",
           description: "",
@@ -170,26 +179,27 @@ function parseCode(code, filepath) {
         //EXTRACT component descendents
         const descendantsMap = new Map();
         component_returnStatementPath.forEach((returnStatement) =>
-          returnStatement.get("argument").traverse({
+          returnStatement.traverse({
             JSXElement(childPath) {
               const opening = childPath.node.openingElement;
 
-              // Handle cases like <Some.Component>
+              // Handle <SomeComponent>
               let tagName = "";
               if (opening.name.type === "JSXIdentifier") {
                 tagName = opening.name.name;
               } else if (opening.name.type === "JSXMemberExpression") {
+                // Handle <Some.Component>
                 // Get only the rightmost name (e.g., Some.Component -> "Component")
                 tagName = opening.name.property.name;
+                if (tagName === "Provider") {
+                  // invalid descendant: ignore Provider, do not add it to the list of descendants
+                  tagName = undefined;
+                }
               }
 
               // Only add component-like elements (capitalized, not HTML tags)
               if (tagName && /^[A-Z]/.test(tagName)) {
                 if (componentIsDeclaredInCode(code, tagName)) {
-                  // locate declaration line
-                  //const descendantLocation = componentsPath.filter(
-                  //  (component) => component.node.id.name === tagName,
-                  //)[0]?.node.loc;
                   /* and record its declaration line */
                   descendantsMap.set(tagName, {
                     location: {
@@ -203,14 +213,6 @@ function parseCode(code, filepath) {
                     location: {},
                   });
                 }
-                /*if (
-                  !descendantLocation?.start.line ||
-                  typeof descendantLocation?.start.line !== "number"
-                ) {
-                warnings.push(
-                  `⚠️  WARNING descendant '${tagName}' has a location that is invalid or unresolved. Check if the component is defined or only imported.`,
-                );
-                }*/
               }
             },
           }),
