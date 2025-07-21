@@ -1,10 +1,17 @@
 # react-diagram-schema
 
-`react-diagram-schema` is a CLI tool that take a React source code directory and turns it into a structured schema.
-The schema can be handed to [react-diagram-visualizer](https://github.com/AmiraBasyouni/react-diagram-visualizer) to generate a visual diagram of your React application.
+`react-diagram-schema` is a CLI tool that transforms React source code into a JSON schema. The schema can be handed to [react-diagram-visualizer](https://github.com/AmiraBasyouni/react-diagram-visualizer) (a companion ReactFlow based tool that renders the schema as an interactive diagram)
 
-## Installation
+## Requirements
+This CLI tool currently only supports parsing `.js` / `.jsx` files. There might be support for `.ts` / `.tsx` files in the future, as indicated in [ROADMAP.md](https://github.com/AmiraBasyouni/react-diagram-schema/blob/main/ROADMAP.md) (a document describing next steps and future plans)
 
+**Project Dependencies**
+- `@babel/parser`
+- `@babel/traverse`
+
+## How To Install
+
+**To Install Locally:**
 ```bash
 git clone https://github.com/AmiraBasyouni/react-diagram-schema
 ```
@@ -17,37 +24,46 @@ cd react-diagram-schema
 npm install
 ```
 
-## Usage
+**To Install Globally:**
+```bash
+npm install -g AmiraBasyouni/react-diagram-schema
+```
 
-**to try it without installing,**   
-generate the schema from any directory using:
+## How To Use
+
+**If Not Installed, Use:**  
 
 ```bash
 npx AmiraBasyouni/react-diagram-schema ./src/ App
 ```
 
-_replace `./src/` with your application's entry directory._   
-_`App` represents the entry component living in your entry directory._
+_replace `./src/` with your application's entry directory._  
+_`App` represents the root React component living in your entry directory._
 
-**if installed locally,**  
+---
+
+**If Installed Locally, Use:**  
 generate the test schema within `react-diagram-schema`'s root folder using:
 
 ```bash
 ./src/build-schema ./test-components/ App
 ```
 
-**if installed globally,**  
+---
+
+**If Installed Globally, Use:**  
 generate the schema from any directory using:
 
 ```bash
-npx build-schema ./src/ App
+build-schema ./src/ App
 ```
-_replace `./src/` with your application's entry directory._   
-_`App` represents the entry component living in your entry directory._
 
-## Example
+_replace `./src/` with your application's entry directory._  
+_`App` represents the root React component, defined in the entry directory's main file._
 
-**Scenario:** You have installed `react-diagram-schema` locally on your device. You are in the repository's root folder.   
+## Usage Example
+
+**Scenario:** You have installed `react-diagram-schema` locally on your device. You are in the repository's root folder.
 
 **You run the command:** `./src/build-schema ./test-components/ App`
 
@@ -126,6 +142,9 @@ _`App` represents the entry component living in your entry directory._
   }
 }
 ```
+Visit [react-diagram-visualizer](https://github.com/AmiraBasyouni/react-diagram-visualizer) for instructions on how to render a schema as an interactive diagram.
+
+You can also pass the schema to custom tools for analysis.
 
 ## Implementation Details
 
@@ -136,7 +155,7 @@ _`App` represents the entry component living in your entry directory._
   - props
   - context dependencies
   - function declarations
-  - source filename and declaration line
+  - component declarations' file path
 
 - Generates a standardized JSON schema describing your app’s structure
 
@@ -144,9 +163,56 @@ _`App` represents the entry component living in your entry directory._
 
 - Integrates seamlessly with [react-diagram-visualizer](https://github.com/AmiraBasyouni/react-diagram-visualizer) which generates a visual diagram of your application.
 
+## Common Errors and Warnings
+
+```
+Error: (build-schema) invalid path undefined, please provide a valid directory as your first argument (e.g. "./src")
+```
+
+This error could indicate one of the following:
+1. you forgot to pass a first argument to the `build-schema` executable.
+2. you passed an invalid first argument to the `build-schema` executable.  
+
+- _**Hint:** Make sure your first argument is a valid directory path (e.g. `./components`)_
+
+---
+
+```
+Error: (build-schema) invalid component name undefined, please provide a valid component's name as your second argument (e.g. "App")
+```
+
+This error could indicate one of the following:
+1. you forgot to pass a second argument to the `build-schema` executable.
+2. you passed an invalid second argument to the `build-schema` executable.  
+
+- _**Hint:** Make sure your second argument is the name of the component defined in your main file (e.g. App defined in App.js or ComponentName defined in index.js)_
+
+---
+
+```
+WARNING: (build-schema) the descendant <descendant-name> of component <component-name> could not be resolved within the file <file-path>
+```  
+
+This warning could indicate one of the following:
+1. the import statement of `<descendant-name>` is missing or could not be parsed.
+
+- _**Hint:** check if an import statement of `<descendant-name>` exists. If so, check if the format of your import statement is supported by the parser_
+
+---
+
+```
+WARNING: (build-schema) could not resolve file path from directory <directory> with the import path <file-path> for component <component-name>
+```
+
+This warning could indicate one of the following:
+1. the file indicated in `<file-path>` does not exist or could not be found by the parser.
+2. the descendant was declared with an in-line function, which is not currently supported.
+
+- _**Hint:** Look for the file indicated in `<file-path>`. If it exists, check if `<component-name>` was declared as an in-line function_
+
 ## Roadmap
 
-See [ROADMAP.md](https://github.com/AmiraBasyouni/react-diagram-schema/blob/main/ROADMAP.md) for next steps and feature plans.
+Please visit [ROADMAP.md](https://github.com/AmiraBasyouni/react-diagram-schema/blob/main/ROADMAP.md) to view the project's progress, planned features, and how you can contribute.
 
 ## License
 
