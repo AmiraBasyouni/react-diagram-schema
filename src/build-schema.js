@@ -120,10 +120,8 @@ while (stack.length > 0) {
 }
 
 /* OUTPUT schema to console */
-if (isVerbose) {
-  console.dir(components, { depth: null, colors: true });
-}
 if (!isSilent) {
+  console.dir(components, { depth: null, colors: true });
   warnings.forEach((warning) => console.warn(warning));
 }
 /* OUTPUT schema to file */
