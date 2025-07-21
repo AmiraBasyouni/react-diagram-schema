@@ -1,27 +1,27 @@
 # react-diagram-schema
 
-`react-diagram-schema` is a CLI tool that transforms React source code into a JSON schema. The schema can be handed to [react-diagram-visualizer](https://github.com/AmiraBasyouni/react-diagram-visualizer) (a companion ReactFlow based tool that renders the schema as an interactive diagram)
+`react-diagram-schema` is a CLI tool that transforms React source code into a JSON schema. The schema can be handed to [react-diagram-visualizer](https://github.com/AmiraBasyouni/react-diagram-visualizer) (a [ReactFlow](https://reactflow.dev/) based tool that renders the schema as an interactive UML-style diagram)
 
 ## Table of Contents
 
-- [Requirements](#requirements)
+- [Limitations](#limitations)
 - [Installation](#installation)
 - [Usage](#usage)
 - [Example Usage](#example-usage)
 - [Flags](#flags)
 - [Troubleshooting](#troubleshooting)
-- [Implementation](#implementation)
+- [About JSON Schema](#about-json-schema)
 - [Roadmap](#roadmap)
 - [License](#license)
 
-## Requirements
+## Limitations
 
-This CLI tool currently only supports parsing `.js` / `.jsx` files. There might be support for `.ts` / `.tsx` files in the future, as indicated in [ROADMAP.md](https://github.com/AmiraBasyouni/react-diagram-schema/blob/main/ROADMAP.md) (a document describing next steps and future plans)
+This CLI tool currently only supports parsing `.js` / `.jsx` files, with plans to support `.ts` / `.tsx` files in the future. To learn more regarding next steps and future plans, check out the [ROADMAP.md](https://github.com/AmiraBasyouni/react-diagram-schema/blob/main/ROADMAP.md) document.
 
-**Project Dependencies**
+**Dependencies**
 
-- `@babel/parser`
-- `@babel/traverse`
+- [@babel/parser](https://www.npmjs.com/package/@babel/parser) - Parses JavaScript code into an AST
+- [@babel/traverse](https://www.npmjs.com/package/@babel/traverse) - Walks the AST and extracts component data
 
 ## Installation
 
@@ -245,22 +245,32 @@ This warning could indicate one of the following:
 
 - _**Hint:** Look for the file indicated in `<file-path>`. If it exists, check if `<component-name>` was declared as an in-line function_
 
-## Implementation
+## About JSON Schema
 
-- Parses a React source file (`.js`, `.jsx`) using `@babel/parser` and `@babel/traverse`.
+- Stores **general** data such as:
+  - a component's name
+  - description about the component's purpose (which will be integrated using in-line comments)
+  - a component's descendants (the component's direct children)
+  - a component's location, specifically the file path and declaration line
 
-- Extracts component-level data:
+---
+
+- Stores **internally defined** data such as:
   - states and state setters
+  - function declarations
+
+---
+
+- Stores **externally defined** data such as:
   - props
   - context dependencies
-  - function declarations
-  - component declarations' file path
+  - constants (which will be integrated in future releases)
 
-- Generates a standardized JSON schema describing your app’s structure
+---
 
-- Versatile schema output — the JSON can power other tools or workflows; feel free to reuse it however you like
-
-- Integrates seamlessly with [react-diagram-visualizer](https://github.com/AmiraBasyouni/react-diagram-visualizer) which generates a visual diagram of your application.
+- Describes your app’s structure
+- Can power other tools or workflows; feel free to reuse it however you like
+- Integrates seamlessly with [react-diagram-visualizer](https://github.com/AmiraBasyouni/react-diagram-visualizer) (a [ReactFlow](https://reactflow.dev/) based tool that renders the schema as an interactive UML-style diagram)
 
 ## Roadmap
 
