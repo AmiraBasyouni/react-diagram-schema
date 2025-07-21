@@ -14,6 +14,9 @@ const warnings = []; // array to collect warnings related to insufficient data
 const components = {};
 const filesVisited = new Map();
 const stack = [];
+const isVerbose = process.argv.includes("--verbose");
+const isSilent =
+  process.argv.includes("--silent") || process.argv.includes("--quiet");
 
 /* initializing stack */
 const entryDirectory = process.argv[2]; //const { code, filename } = readSourceFile(inputFile);
@@ -27,28 +30,31 @@ stack.push({
 /* guard against invalid inputs */
 if (typeof entryDirectory != "string" || isFile(entryDirectory)) {
   throw new Error(
-    `invalid path "${entryDirectory}", please provide a valid directory as your second argument (e.g. "./src")`,
+    `(build-schema) invalid path "${entryDirectory}", please provide a valid directory as your first argument (e.g. "./src")`,
   );
 }
 if (typeof entryComponentName != "string" || entryComponentName.length === 0) {
   throw new Error(
-    `invalid component name "${entryComponentName}", please provide a valid component's name as your third argument (e.g. "App")`,
+    `(build-schema) invalid component name "${entryComponentName}", please provide a valid component's name as your second argument (e.g. "App")`,
   );
 }
 
 /* DFS Approach for traversing files */
 while (stack.length > 0) {
   const { directory, importPath, componentName } = stack.pop();
-  console.log(
-    `retrieved directory "${directory}", import path "${importPath}", and component name "${componentName}"`,
-  );
+  if (isVerbose) {
+    console.log(
+      `Notice: (build-schema) retrieved directory "${directory}", import path "${importPath}", and component name "${componentName}"`,
+    );
+  }
   const filePath = resolveFilePath(directory, importPath, componentName);
   /* guard against resolveFilePath failure */
   if (!filePath) {
-    console.log(filePath);
-    console.warn(
-      `could not resolve file path from directory "${directory}" with the import path "${importPath}" for component "${componentName}"`,
-    );
+    if (!isSilent) {
+      console.warn(
+        `WARNING: (build-schema) could not resolve the file path from directory "${directory}" with the import path "${importPath}" for component "${componentName}"`,
+      );
+    }
     continue;
   }
   /* guard against repeating visits (e.g. in the case of two components importing one another) */
@@ -60,9 +66,11 @@ while (stack.length > 0) {
   const schema = parseCode(code, filePath);
   /* guard against parseCode failure */
   if (!schema) {
-    console.warn(
-      `Failed to parse component ${componentName} stored in the file ${filePath}`,
-    );
+    if (!isSilent) {
+      console.warn(
+        `WARNING: (build-schema) failed to parse component "${componentName}" stored in the file "${filePath}"`,
+      );
+    }
     continue;
   }
   /* account for when multiple components are defined in the same file */
@@ -77,7 +85,7 @@ while (stack.length > 0) {
       /* guard against a descendant missing its import statement */
       if (!descendantImportPath) {
         warnings.push(
-          `The descendant ${unresolvedDescendant} of component ${componentName} could not be resolved within the file ${filePath}`,
+          `WARNING: (build-schema) the descendant "${unresolvedDescendant}" of component "${componentName}" could not be resolved within the file "${filePath}"`,
         );
       } else {
         /* update component's descendant's file path */
@@ -90,9 +98,11 @@ while (stack.length > 0) {
           location: { filepath: descendantFilePath },
         });
         /* plan on visiting this descendant */
-        console.log(
-          `planning to visit directory ${directory}, in import path ${descendantImportPath}, to resolve ${unresolvedDescendant}`,
-        );
+        if (isVerbose) {
+          console.log(
+            `Notice: (build-schema) planning to visit directory "${directory}", in import path "${descendantImportPath}", to resolve "${unresolvedDescendant}"`,
+          );
+        }
         stack.push({
           directory,
           importPath: descendantImportPath,
@@ -110,8 +120,11 @@ while (stack.length > 0) {
 }
 
 /* OUTPUT schema to console */
-console.dir(components, { depth: null, colors: true });
-warnings.forEach((warning) => console.warn(warning));
-
+if (isVerbose) {
+  console.dir(components, { depth: null, colors: true });
+}
+if (!isSilent) {
+  warnings.forEach((warning) => console.warn(warning));
+}
 /* OUTPUT schema to file */
 generateSchemaFile(components);
