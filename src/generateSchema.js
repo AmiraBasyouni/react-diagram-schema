@@ -5,14 +5,14 @@ const readline = require("readline");
 
 function generateSchemaFile(
   schema,
-  outputDirName = "./",
   outputFileName = "schema.json",
+  //outputDirName = "./",
 ) {
-  const outputDir = path.join(process.cwd(), outputDirName);
-
-  if (!fs.existsSync(outputDir)) {
-    fs.mkdirSync(outputDir, { recursive: true });
-  }
+  //const outputDir = path.join(process.cwd(), outputDirName);
+  const outputDir = process.cwd();
+  //if (!fs.existsSync(outputDir)) {
+  //  fs.mkdirSync(outputDir, { recursive: true });
+  //}
 
   const outputPath = path.join(outputDir, outputFileName);
 
