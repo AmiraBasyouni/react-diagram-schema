@@ -12,6 +12,7 @@
 - [Troubleshooting](#troubleshooting)
 - [About JSON Schema](#about-json-schema)
 - [Roadmap](#roadmap)
+- [Contributing](#contributing)
 - [License](#license)
 
 ## Limitations
@@ -159,7 +160,10 @@ _`App` represents the root React component, defined in the entry directory's mai
 }
 ```
 
-Visit [react-diagram-visualizer](https://github.com/AmiraBasyouni/react-diagram-visualizer) for instructions on how to render a schema as an interactive diagram.
+Visit [react-diagram-visualizer](https://github.com/AmiraBasyouni/react-diagram-visualizer) for instructions on how to render a schema as an interactive diagram.  
+
+The above schema should give you the following diagram:
+![ReactFlow Diagram](assets/readme-md-diagram-preview.png)
 
 You can also pass the schema to custom tools for analysis.
 
@@ -274,7 +278,11 @@ This warning could indicate one of the following:
 
 ## Roadmap
 
-Please visit [ROADMAP.md](https://github.com/AmiraBasyouni/react-diagram-schema/blob/main/ROADMAP.md) to view the project's progress, planned features, and how you can contribute.
+Please visit [ROADMAP.md](https://github.com/AmiraBasyouni/react-diagram-schema/blob/main/ROADMAP.md) to view the project's progress, and planned features.
+
+## Contributing
+
+Please visit [CONTRIBUTING.md](https://github.com/AmiraBasyouni/react-diagram-schema/blob/main/CONTRIBUTING.md) to learn about how you can contribute to `react-diagram-schema`.
 
 ## License
 
