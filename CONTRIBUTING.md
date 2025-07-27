@@ -9,18 +9,19 @@ Thank you for your interest in contributing! 🎉
 - visit [react-diagram-schema](https://github.com/AmiraBasyouni/react-diagram-schema)
 - click on the button labeled "Fork"
 - alternatively, if you have gh set up on your terminal, use the following command:
-```bash
-gh repo fork AmiraBasyouni/react-diagram-schema
-````
+   ```bash
+   gh repo fork AmiraBasyouni/react-diagram-schema
+   ````
 
 2. Clone your fork  
-```bash
-git clone https://github.com/<your-username>/react-diagram-schema.git
-```
+   ```bash
+   git clone https://github.com/<your-username>/react-diagram-schema.git
+   ```
+
 3. Install dependencies
-```bash
-npm install
-```
+   ```bash
+   npm install
+   ```
 
 ## How You Can Contribute
 
@@ -55,9 +56,9 @@ Note: you can find the full schema in [ROADMAP.md](https://github.com/AmiraBasyo
 ## Pull Requests
 
 1. **Branch** from main:
-```bash
-git checkout -b fix-bug-header
-```
+   ```bash
+   git checkout -b fix-bug-header
+   ```
 
 2. **Write clear commits**:
 Example:`fix(codeParser): enhance props parsing to handle RestElement`
@@ -74,37 +75,37 @@ Example:
 - inside the `Header.jsx` file, write the React component:  
  `function Header(){ return <h1>Hello World!</h1>; }`
 - inside `react-diagram-schema`'s root folder, generate a schema using the following command:
-```bash
-node ./src/build-schema.js ./test-components/ Header
-```
+   ```bash
+   node ./src/build-schema.js ./test-components/ Header
+   ```
 - and the console should show the following schema as output:
-```js
-{
-  'Header::Header.jsx': {
-    name: 'Header',
-    description: '',
-    descendants: [],
-    internal: { states: [], functions: [] },
-    external: { props: [], context: [], constants: [] },
-    location: { line: 1, filepath: 'Header.jsx' },
-    unresolvedDescendants: undefined
-  }
-}
-```
+   ```js
+   {
+     'Header::Header.jsx': {
+       name: 'Header',
+       description: '',
+       descendants: [],
+       internal: { states: [], functions: [] },
+       external: { props: [], context: [], constants: [] },
+       location: { line: 1, filepath: 'Header.jsx' },
+       unresolvedDescendants: undefined
+     }
+   }
+   ```
 - from there, you can adjust your source code to ensure the generated `./schema.json` remains correct in different scenarios
 
 If your changes affect **multi-file parsing** (i.e. your React source code (e.g. Header.jsx) imports components that live in differnt files), ensure cross-file components are linked correctly.  
 
 If you choose to visualize the above schema,
 1. clone the react-diagram-visualizer repository
-```bash
-git clone https://github.com/AmiraBasyouni/react-diagram-visualizer.git
-```
+   ```bash
+   git clone https://github.com/AmiraBasyouni/react-diagram-visualizer.git
+   ```
 2. place your schema.json file inside the src folder of `react-diagram-visualizer` 
 3. run the visualizer using the command:
-```bash
-npm run dev
-```
+   ```bash
+   npm run dev
+   ```
 The diagram should look like this:  
 ![Simple ReactFlow Diagram Demo](assets/contributing-md-diagram-preview.png)
 
