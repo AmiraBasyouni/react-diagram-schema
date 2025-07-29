@@ -1,7 +1,7 @@
 # Contributing to react-diagram-schema
 
 Thank you for your interest in contributing! 🎉  
-`react-diagram-schema` is a a standalone CLI tool that generates a JSON schema from React source code, designed to integrate with [react-diagram-visualizer](https://github.com/AmiraBasyouni/react-diagram-visualizer) for visualizing [ReactFlow](https://reactflow.dev/)-based UML diagrams. We aim to make React component architecture more **visual, structured, and developer-friendly**, and your help can make a big difference.
+`react-diagram-schema` is a standalone CLI tool that generates a JSON schema from React source code, designed to integrate with [react-diagram-visualizer](https://github.com/AmiraBasyouni/react-diagram-visualizer) for visualizing [ReactFlow](https://reactflow.dev/)-based UML diagrams. We aim to make React component architecture more **visual, structured, and developer-friendly**, and your help can make a big difference.
 
 ## How to Get Started
 
@@ -94,7 +94,7 @@ Example:
    ```
 - from there, you can adjust your source code to ensure the generated `./schema.json` remains correct in different scenarios
 
-If your changes affect **multi-file parsing** (i.e. your React source code (e.g. Header.jsx) imports components that live in differnt files), ensure cross-file components are linked correctly.  
+If your changes affect **multi-file parsing** (i.e. your React source code (e.g. Header.jsx) imports components that live in different files), ensure cross-file components are linked correctly.  
 
 If you choose to visualize the above schema,
 1. clone the react-diagram-visualizer repository
