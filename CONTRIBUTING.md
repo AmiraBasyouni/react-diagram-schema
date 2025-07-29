@@ -72,7 +72,7 @@ Note: you can find the full schema in [ROADMAP.md](https://github.com/AmiraBasyo
 2. **Write commits in [Coniventional Commits](https://www.conventionalcommits.org/) style**:  
    Use a prefix like `fix`, `feat`, or `docs`, followed by the scope (e.g., `codeParser`, `readme`) and a brief description.
 
-   Example:
+   Examples:
 
 - `fix(codeParser): improve props parsing for RestElement`
 - `feat(parser): ass support for React.lazy components`
