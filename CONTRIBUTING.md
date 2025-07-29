@@ -69,12 +69,18 @@ Note: you can find the full schema in [ROADMAP.md](https://github.com/AmiraBasyo
    git checkout -b fix-bug-header
    ```
 
-2. **Write clear commits**:
-   Example:`fix(codeParser): enhance props parsing to handle RestElement`
+2. **Write commits in [Coniventional Commits](https://www.conventionalcommits.org/) style**:  
+   Use a prefix like `fix`, `feat`, or `docs`, followed by the scope (e.g., `codeParser`, `readme`) and a brief description. 
+ 
+   Example:
 
-3. **Push** and open a pull request.
+- `fix(codeParser): improve props parsing for RestElement`
+- `feat(parser): ass support for React.lazy components`
+- `docs(readme): clarify multi-file parsing usage`
 
-4. Include **screenshots or schema output** if your change affects visualization or parsing.
+3. **Push** your branch and open a pull request on GitHub.
+
+4. Include **screenshots or schema output** in your pull request if your changes affect parsing or visualization (e.g., new schema fields or diagram updates).
 
 ## Testing your Changes
 
