@@ -5,7 +5,9 @@
   "main": "build-schema.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "commit": "./scripts/generate-commit-msg.sh"
+    "commit": "./scripts/generate-commit-msg.sh",
+    "lint": "npx eslint . --fix",
+    "format": "npx prettier . --write"
   },
   "bin": {
     "build-schema": "./src/build-schema.js"

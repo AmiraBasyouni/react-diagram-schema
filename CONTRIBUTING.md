@@ -51,7 +51,7 @@ Small fixes (typos, minor code tweaks) can skip this step.
 
 ## Coding Standards
 
-- **Formatting**: We use Prettier and ESLint.
+- **Formatting**: We use Prettier and ESLint. Run `npm run lint` and `npm run format` before submitting.
 - **File Naming**: camelCase for utilities, PascalCase for core modules.
 - **Schema Shape**: Keep the structure consistent with the current spec:
 
