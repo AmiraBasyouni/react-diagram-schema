@@ -160,7 +160,7 @@ _`App` represents the root React component, defined in the entry directory's mai
 }
 ```
 
-Visit [react-diagram-visualizer](https://github.com/AmiraBasyouni/react-diagram-visualizer) for instructions on how to render a schema as an interactive diagram.  
+Visit [react-diagram-visualizer](https://github.com/AmiraBasyouni/react-diagram-visualizer) for instructions on how to render a schema as an interactive diagram.
 
 The above schema should give you the following diagram:
 ![ReactFlow Diagram](assets/readme-md-diagram-preview.png)

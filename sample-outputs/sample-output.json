@@ -5,12 +5,7 @@
       "name": "App",
       "description": "",
       "internal": {
-        "states": [
-          [
-            "count",
-            "setCount"
-          ]
-        ],
+        "states": [["count", "setCount"]],
         "functions": []
       },
       "external": {
