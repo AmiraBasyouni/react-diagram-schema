@@ -1,8 +1,8 @@
 ---
 name: Bug report
 about: Report an issue with react-diagram-schema parsing or schema output
-title: ''
-labels: ''
+title: "[BUG] <short description> "
+labels: bug
 assignees: ''
 
 ---
