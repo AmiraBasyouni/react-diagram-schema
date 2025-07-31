@@ -63,7 +63,7 @@ _`App` represents the root React component living in your entry directory._
 generate the test schema within `react-diagram-schema`'s root folder using:
 
 ```bash
-./src/build-schema ./test-components/ App
+./src/build-schema ./sample-components/ App
 ```
 
 ---
@@ -82,18 +82,18 @@ _`App` represents the root React component, defined in the entry directory's mai
 
 **Scenario:** You have installed `react-diagram-schema` locally on your device. You are in the repository's root folder.
 
-**You run the command:** `./src/build-schema ./test-components/ App`
+**You run the command:** `./src/build-schema ./sample-components/ App`
 
 **A schema.json file is created containing the following:**
 
 ```json
 {
-  "App::../test-components/App.js": {
+  "App::../sample-components/App.js": {
     "name": "App",
     "description": "",
     "descendants": [
-      "Header::../test-components/Header.js",
-      "Content::../test-components/App.js"
+      "Header::../sample-components/Header.js",
+      "Content::../sample-components/App.js"
     ],
     "internal": {
       "states": [
@@ -118,10 +118,10 @@ _`App` represents the root React component, defined in the entry directory's mai
     },
     "location": {
       "line": 7,
-      "filepath": "../test-components/App.js"
+      "filepath": "../sample-components/App.js"
     }
   },
-  "Content::../test-components/App.js": {
+  "Content::../sample-components/App.js": {
     "name": "Content",
     "description": "",
     "descendants": [],
@@ -136,10 +136,10 @@ _`App` represents the root React component, defined in the entry directory's mai
     },
     "location": {
       "line": 43,
-      "filepath": "../test-components/App.js"
+      "filepath": "../sample-components/App.js"
     }
   },
-  "Header::../test-components/Header.js": {
+  "Header::../sample-components/Header.js": {
     "name": "Header",
     "description": "",
     "descendants": [],
@@ -154,7 +154,7 @@ _`App` represents the root React component, defined in the entry directory's mai
     },
     "location": {
       "line": 3,
-      "filepath": "../test-components/Header.js"
+      "filepath": "../sample-components/Header.js"
     }
   }
 }
