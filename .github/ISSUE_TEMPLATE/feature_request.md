@@ -2,9 +2,8 @@
 name: Feature request
 about: Suggest an improvement or new capability for react-diagram-schema
 title: "[FEATURE] <short description>"
-labels: ''
-assignees: ''
-
+labels: ""
+assignees: ""
 ---
 
 **Is your feature request related to a specific use case or limitation? Please describe.**  
