@@ -2,7 +2,7 @@
 name: Feature request
 about: Suggest an improvement or new capability for react-diagram-schema
 title: "[FEATURE] <short description>"
-labels: ""
+labels: enhancement
 assignees: ""
 ---
 
