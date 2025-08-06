@@ -1,7 +1,8 @@
 // imports
 const parser = require("@babel/parser");
 const traverse = require("@babel/traverse").default;
-const getInlineComponentDeclaratorPaths = require("./utils/getInlineComponentDeclaratorPaths");
+//const getInlineComponentDeclaratorPaths = require("./utils/getInlineComponentDeclaratorPaths");
+const isInlineReactComponent = require("./utils/isInlineReactComponent");
 const extractMetadata = require("./utils/extractMetadata.js");
 
 /* Build the following schema structure
@@ -47,10 +48,39 @@ function parseCode(code, filepath) {
     Program(path) {
       const program_bodyPath = path.get("body");
 
+      // ---- support-exported components -----------------------------------------------------------------
+      // helper function: filter export declarations
+      const isExportDeclaration = (path) =>
+        path.isExportDefaultDeclaration || path.isExportNamedDeclaration;
+
+      //EXTRACT export declarations
+      const exportDeclarationPaths =
+        program_bodyPath.filter(isExportDeclaration);
+
       // ---- inline-defined components -----------------------------------------------------------------
+
       //EXTRACT inline REACT-COMPONENTS
+      const inlineComponentDeclarationPaths = program_bodyPath.filter(
+        isInlineReactComponent,
+      );
       const inlineComponentDeclaratorPaths =
-        getInlineComponentDeclaratorPaths(program_bodyPath);
+        inlineComponentDeclarationPaths.map(
+          (declaration) => declaration.get("declarations")[0],
+        );
+
+      //EXTRACT inline export declarations
+      const exportVariableDeclarationPaths = exportDeclarationPaths
+        .map((exportDeclaration) => exportDeclaration.get("declaration"))
+        .filter(isInlineReactComponent);
+      const exportVariableDeclaratorPaths = exportVariableDeclarationPaths.map(
+        (declaration) => declaration.get("declarations")[0],
+      );
+
+      //MERGE exports WITH normal inline declarations
+      exportVariableDeclaratorPaths.forEach((exportVariable) =>
+        inlineComponentDeclaratorPaths.push(exportVariable),
+      );
+
       //EXTRACT metadata { name: "", internal: {states: [], functions: []}, location: null } FROM EACH inline REACT COMPONENT
       const metadata = extractMetadata(
         inlineComponentDeclaratorPaths,
@@ -64,21 +94,35 @@ function parseCode(code, filepath) {
         (obj) => (components[`${obj.name}::${obj.location.filepath}`] = obj),
       );
 
-      /* function-defined components */
-      // helper function: filter function declarations to select React function-defined components
-      const isReactComponent = (path) =>
+      // ---- function-defined components -----------------------------------------------------------------
+      // helper function: filter function-defined React declarations
+      const isFunctionDefinedReactComponent = (path) =>
         path.isFunctionDeclaration() && /^[A-Z]/.test(path.node.id.name);
-      //EXTRACT REACT-COMPONENTS
-      /* extract function-defined components*/
-      const componentPaths = program_bodyPath.filter(isReactComponent);
 
-      /* extract metadata from function-defined components */
+      //EXTRACT function-defined REACT COMPONENTS
+      const functionDefinedComponentPaths = program_bodyPath.filter(
+        isFunctionDefinedReactComponent,
+      );
+
+      //EXTRACT exported function-defined REACT COMPONENTS
+      const exportFunctionDeclarationPaths = exportDeclarationPaths
+        .map((exportDeclaration) => exportDeclaration.get("declaration"))
+        .filter(isFunctionDefinedReactComponent);
+      console.log(exportFunctionDeclarationPaths);
+
+      //MERGE exports WITH normal function-defined declarations
+      exportFunctionDeclarationPaths.forEach((exportFunction) =>
+        functionDefinedComponentPaths.push(exportFunction),
+      );
+
+      //EXTRACT metadata FROM function-defined COMPONENTS
       const metadataDefined = extractMetadata(
-        componentPaths,
+        functionDefinedComponentPaths,
         "defined",
         code,
         filepath,
       );
+      //APPEND COMPONENT-LOGIC TO SCHEMA
       metadataDefined.forEach(
         (obj) => (components[`${obj.name}::${obj.location.filepath}`] = obj),
       );

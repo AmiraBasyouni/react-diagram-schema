@@ -3,7 +3,7 @@
 /* imports */
 const parser = require("@babel/parser");
 const traverse = require("@babel/traverse").default;
-const getInlineComponentDeclaratorPaths = require("./getInlineComponentDeclaratorPaths");
+const isInlineReactComponent = require("./isInlineReactComponent");
 
 /* fulfilling objective using AST traverser */
 function componentIsDeclaredInCode(code, componentName) {
@@ -24,8 +24,13 @@ function componentIsDeclaredInCode(code, componentName) {
 
       //----inline React components ------------------------------------------------------------------
       //EXTRACT inline REACT COMPONENTS
+      const inlineComponentDeclarationPaths = program_bodyPath.filter(
+        isInlineReactComponent,
+      );
       const inlineComponentDeclaratorPaths =
-        getInlineComponentDeclaratorPaths(program_bodyPath);
+        inlineComponentDeclarationPaths.map(
+          (declaration) => declaration.get("declarations")[0],
+        );
 
       // for each inline component
       inlineComponentDeclaratorPaths.forEach((componentPath) => {

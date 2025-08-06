@@ -1,6 +1,6 @@
 // getInlineComponentDeclaratorPaths.js
 
-function getInlineComponentDeclaratorPaths(program_bodyPath) {
+function isInlineReactComponent(program_bodyPath) {
   // 1) helper function: filter variable declarations to select React inline declared React components
   const isInlineReactComponent = (path) => {
     // WARNING: .get() is eager — it can be called before && can decide to skip it.
@@ -14,14 +14,16 @@ function getInlineComponentDeclaratorPaths(program_bodyPath) {
       /^[A-Z]/.test(path.get("declarations")[0].node.id.name)
     );
   };
+  return isInlineReactComponent(program_bodyPath);
+  /*
   //EXTRACT inline REACT-COMPONENTS
-  /* 2) extract inline React components */
+  // 2) extract inline React components 
   const inlineComponentDeclarationPaths = program_bodyPath.filter(
     isInlineReactComponent,
   );
   return inlineComponentDeclarationPaths.map(
     (declaration) => declaration.get("declarations")[0],
-  );
+  );*/
 }
 
-module.exports = getInlineComponentDeclaratorPaths;
+module.exports = isInlineReactComponent;
