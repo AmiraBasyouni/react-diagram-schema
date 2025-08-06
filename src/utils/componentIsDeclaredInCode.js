@@ -3,6 +3,7 @@
 /* imports */
 const parser = require("@babel/parser");
 const traverse = require("@babel/traverse").default;
+const getInlineComponentDeclaratorPaths = require("./getInlineComponentDeclaratorPaths");
 
 /* fulfilling objective using AST traverser */
 function componentIsDeclaredInCode(code, componentName) {
@@ -21,14 +22,31 @@ function componentIsDeclaredInCode(code, componentName) {
     Program(path) {
       const program_bodyPath = path.get("body");
 
-      /* (helper-function) filter React component declarations from a set of function declarations */
+      //----inline React components ------------------------------------------------------------------
+      //EXTRACT inline REACT COMPONENTS
+      const inlineComponentDeclaratorPaths =
+        getInlineComponentDeclaratorPaths(program_bodyPath);
+
+      // for each inline component
+      inlineComponentDeclaratorPaths.forEach((componentPath) => {
+        // check if this component's name matches the name given to us as an argument (i.e. content of componentName)
+        if (componentPath.node.id.name === componentName) {
+          // if so, then we've confirmed our component's declaration exists!
+          returnValue = true;
+        }
+      });
+
+      //----function-defined components ----------------------------------------------------------------------
+      /* function-defined components */
+      // 1) helper function: filter function declarations to select React function-defined components
       const isReactComponent = (path) =>
         path.isFunctionDeclaration() && /^[A-Z]/.test(path.node.id.name);
 
-      /* extract the path of component declarations */
+      //EXTRACT function-defined REACT-COMPONENTS
+      /* 2) extract function-defined components*/
       const componentPaths = program_bodyPath.filter(isReactComponent);
 
-      /* for each component declaration, */
+      /* 3) for each funcion-defined component declaration, */
       componentPaths.forEach((componentPath) => {
         /* check if this component's name matches the name given to us as an argument (i.e. content of componentName) */
         if (componentPath.node.id.name === componentName) {

@@ -74,11 +74,11 @@ while (stack.length > 0) {
     continue;
   }
   /* account for when multiple components are defined in the same file */
-  schema.forEach((component) => {
+  Object.values(schema).forEach((component) => {
     components[`${component.name}::${filePath}`] = component;
   });
   /* for each of the component's descendants whose declaration could not be found, */
-  schema.forEach((component) => {
+  Object.values(schema).forEach((component) => {
     component.unresolvedDescendants.forEach((unresolvedDescendant) => {
       /* collect the descendant's import statement */
       const descendantImportPath = parseImport(code, unresolvedDescendant);
