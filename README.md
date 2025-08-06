@@ -245,15 +245,15 @@ WARNING: (build-schema) could not resolve file path from directory <directory> w
 This warning could indicate one of the following:
 
 1. the file indicated in `<file-path>` does not exist or could not be found by the parser.
-2. the descendant was declared with an in-line function, which is not currently supported.
+2. the descendant was imported from `node_modules` (if this is the case, then you can safely ignore this warning).
 
-- _**Hint:** Look for the file indicated in `<file-path>`. If it exists, check if `<component-name>` was declared as an in-line function_
+- _**Hint:** Look for the file indicated in `<file-path>`_
 
 ## About JSON Schema
 
 - Stores **general** data such as:
   - a component's name
-  - description about the component's purpose (which will be integrated using in-line comments)
+  - description about the component's purpose (which will be integrated using inline comments)
   - a component's descendants (the component's direct children)
   - a component's location, specifically the file path and declaration line
 
