@@ -108,7 +108,6 @@ function parseCode(code, filepath) {
       const exportFunctionDeclarationPaths = exportDeclarationPaths
         .map((exportDeclaration) => exportDeclaration.get("declaration"))
         .filter(isFunctionDefinedReactComponent);
-      console.log(exportFunctionDeclarationPaths);
 
       //MERGE exports WITH normal function-defined declarations
       exportFunctionDeclarationPaths.forEach((exportFunction) =>
