@@ -27,15 +27,32 @@ function extractMetadata(componentPaths, type, code, filepath) {
     const componentExternalPath =
       type === "inline" ? componentPath.get("init") : componentPath;
 
-    //-- IF BLOCK STATEMENT EXISTS (guards against () =><h1>JSX</h1>) ------------------------
+    //-- IF BLOCK STATEMENT EXISTS (guards against omitted block statement  () =><h1>JSX</h1>) ------------------------
     if (componentInternalPath.get("body").isBlockStatement()) {
       //EXTRACT internal functions from a React Component -> [ "func1", "func2", ... ]
-      obj.internal.functions = componentInternalPath
+      const blockStatementBody_path = componentInternalPath
         .get("body")
-        .get("body")
+        .get("body");
+      // function-defined
+      obj.internal.functions = blockStatementBody_path
         .filter((path) => path.isFunctionDeclaration())
         .map((fn) => fn.node.id?.name) // access name if it exists
         .filter(Boolean); // filter out any undefined or null names
+      // inline arrow functions
+      const inline = blockStatementBody_path
+        .filter((path) => path.isVariableDeclaration())
+        .flatMap((varDeclaration) =>
+          varDeclaration.get("declarations").map((declarator) => {
+            if (
+              declarator.isVariableDeclarator() &&
+              declarator.get("init").isArrowFunctionExpression()
+            ) {
+              return declarator.node.id?.name;
+            }
+          }),
+        )
+        .filter(Boolean);
+      obj.internal.functions.push(...inline);
 
       // helper variable: extract VariableDeclarations from a React component
       const component_VarDeclarations = componentInternalPath
