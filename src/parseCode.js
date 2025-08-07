@@ -1,8 +1,8 @@
 // imports
 const parser = require("@babel/parser");
 const traverse = require("@babel/traverse").default;
-//const getInlineComponentDeclaratorPaths = require("./utils/getInlineComponentDeclaratorPaths");
 const isInlineReactComponent = require("./utils/isInlineReactComponent");
+const isFunctionDefinedReactComponent = require("./utils/isFunctionDefinedReactComponent");
 const extractMetadata = require("./utils/extractMetadata.js");
 
 /* Build the following schema structure
@@ -95,10 +95,10 @@ function parseCode(code, filepath) {
       );
 
       // ---- function-defined components -----------------------------------------------------------------
-      // helper function: filter function-defined React declarations
+      /*      // helper function: filter function-defined React declarations
       const isFunctionDefinedReactComponent = (path) =>
         path.isFunctionDeclaration() && /^[A-Z]/.test(path.node.id.name);
-
+*/
       //EXTRACT function-defined REACT COMPONENTS
       const functionDefinedComponentPaths = program_bodyPath.filter(
         isFunctionDefinedReactComponent,
