@@ -23,8 +23,12 @@ function resolveFilePath(directory, importPath, componentName) {
 
   /* create candidate file paths (in order of priority) */
   const candidateFiles = [
+    path.join(absolutePath, componentName + ".tsx"),
+    path.join(absolutePath, componentName + ".ts"),
     path.join(absolutePath, componentName + ".jsx"),
     path.join(absolutePath, componentName + ".js"),
+    path.join(absolutePath, "index.tsx"),
+    path.join(absolutePath, "index.ts"),
     path.join(absolutePath, "index.jsx"),
     path.join(absolutePath, "index.js"),
   ];
