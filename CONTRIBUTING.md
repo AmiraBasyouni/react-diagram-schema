@@ -84,50 +84,118 @@ Note: you can find the full schema in [ROADMAP.md](https://github.com/AmiraBasyo
 
 ## Testing your Changes
 
-Try parsing a single component!
+`react-diagram-schema` includes an automated test suite powered by [Jest](https://jestjs.io/)
 
-Example:
+**Running the tests**
 
-- create a file `Header.jsx` in the directory `./test-components`
-- inside the `Header.jsx` file, write the React component:  
-  `function Header(){ return <h1>Hello World!</h1>; }`
-- inside `react-diagram-schema`'s root folder, generate a schema using the following command:
+- To run all tests:
+
   ```bash
-  node ./src/build-schema.js ./test-components/ Header
+  npm test
   ```
-- and the console should show the following schema as output:
+
+- To run a specific test file:
+
+  ```bash
+  npx jest test/components.test.jsx
+  ```
+
+---
+
+**Test types included**
+
+- **Component detection tests**:  
+  Validate that function-defined and inline components are correctly parsed.
+
+- **Data extraction tests**:  
+  Ensure props, states, context, and functions are accurately extracted from components.
+
+- **Edge case tests**:  
+  Handle tricky structures like nested components, default exports, and files with missing metadata.
+
+---
+
+**Adding new tests**
+
+- Add test files under the `tests/` directory. Use a feature-based structure (e.g. `components.test.js`, `dataExtraction.test.js`, `edgeCases.test.js`).
+
+- Use `parseCode(code, filePath)` as your entry point for schema generation.
+
+- Keep tests isolated and easy to understand.  
+  Example:
+
+  ```JavaScript
+  expect(result["MyComponent::file.js"].external.props).toContain("title");
+  ```
+
+- Prefer `Object.keys(result)` to validate which components are detected.  
+  Example:
   ```js
-  {
-    'Header::Header.jsx': {
-      name: 'Header',
-      description: '',
-      descendants: [],
-      internal: { states: [], functions: [] },
-      external: { props: [], context: [], constants: [] },
-      location: { line: 1, filepath: 'Header.jsx' },
-      unresolvedDescendants: undefined
-    }
-  }
+  const keys = Object.keys(result);
+  expect(keys).toContain(`App::${fakePath}`);
   ```
-- from there, you can adjust your source code to ensure the generated `./schema.json` remains correct in different scenarios
 
-If your changes affect **multi-file parsing** (i.e. your React source code (e.g. Header.jsx) imports components that live in different files), ensure cross-file components are linked correctly.
+---
 
-If you choose to visualize the above schema,
+**Manual testing**
 
-1. clone the react-diagram-visualizer repository
+Automated tests catch most issues, but you can also test the CLI manually.
+
+**Try parsing a single component**
+
+1. Create a file `Header.jsx` in the directory `./test-components`
+2. Add this component:
+
+   ```JavaScript
+   function Header(){
+     return <h1>Hello World!</h1>;
+   }
+   ```
+
+3. From the root repo, run:
+
+```bash
+node ./src/build-schema.js ./test-components/ Header
+```
+
+4. You should see this output in your console:
+
+   ```js
+   {
+     'Header::Header.jsx': {
+       name: 'Header',
+       description: '',
+       descendants: [],
+       internal: { states: [], functions: [] },
+       external: { props: [], context: [], constants: [] },
+       location: { line: 1, filepath: 'Header.jsx' },
+       unresolvedDescendants: undefined
+     }
+   }
+   ```
+
+---
+
+**Visualizing the output**  
+You can visualize `schema.json` using [react-diagram-visualizer](https://github.com/AmiraBasyouni/react-diagram-visualizer)
+
+1. Clone the visualizer:
    ```bash
    git clone https://github.com/AmiraBasyouni/react-diagram-visualizer.git
    ```
-2. place your schema.json file inside the src folder of `react-diagram-visualizer`
-3. run the visualizer using the command:
+2. Place your `schema.json` file inside the `src/ folder.
+
+3. run the app:
+
    ```bash
    npm run dev
    ```
-   The diagram should look like this:  
-   ![Simple ReactFlow Diagram Demo](assets/contributing-md-diagram-preview.png)
 
-As you add props, states, and function declarations, you should interrupt the `react-diagram-visualizer`'s processes using `Ctrl+c` and run `npm run dev` again to see the changes show up in your diagram.
+   You'll see a diagram rendered using ReactFlow.
+   The diagram for `Header.jsx` should look like this (confirming the parser and visualizer are correctly wired):  
+   ![React Flow diagram showing Header component node](assets/contributing-md-diagram-preview.png)
+
+   ⚠️ Note: If you change the `schema.json` file, stop the visualizer with `Ctrl+c`, then run `npm run dev` again to see your updates in the diagram.
 
 ## New To Open Source?
 
