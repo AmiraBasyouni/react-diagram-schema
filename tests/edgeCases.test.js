@@ -2,20 +2,6 @@
 const parseCode = require("../src/parseCode");
 
 describe("Edge Cases", () => {
-  test("component with no props", () => {
-    const fakePath = "../fake/NoProps.js";
-    const code = `
-      function NoProps() {
-        return <div>No props here</div>;
-      }
-    `;
-
-    const result = parseCode(code, fakePath);
-    const component = result[`NoProps::${fakePath}`];
-
-    expect(component.external.props).toEqual([]);
-  });
-
   test("component with no state variables", () => {
     const fakePath = "../fake/NoState.js";
     const code = `
@@ -28,6 +14,36 @@ describe("Edge Cases", () => {
     const component = result[`NoState::${fakePath}`];
 
     expect(component.internal.states).toEqual([]);
+  });
+
+  test("component with no internal function declarations returns an empty functions array", () => {
+    const fakePath = "../fake/NoFunctionsComponent.js";
+    const code = `
+    function NoFunctionsComponent() {
+      const title = "No internal functions here";
+      return <h1>{title}</h1>;
+    }
+  `;
+
+    const result = parseCode(code, fakePath);
+
+    const internalFunctions =
+      result[`NoFunctionsComponent::${fakePath}`].internal.functions;
+    expect(internalFunctions).toEqual([]);
+  });
+
+  test("component with no props", () => {
+    const fakePath = "../fake/NoProps.js";
+    const code = `
+      function NoProps() {
+        return <div>No props here</div>;
+      }
+    `;
+
+    const result = parseCode(code, fakePath);
+    const component = result[`NoProps::${fakePath}`];
+
+    expect(component.external.props).toEqual([]);
   });
 
   test("component with no context usage", () => {
@@ -80,6 +96,33 @@ describe("Edge Cases", () => {
     const parentFunctions =
       result[`NestedStructure::${fakePath}`].internal.functions;
     expect(parentFunctions).toContain("Wrapper");
+  });
+
+  test("component with a nested function-defined component is detected and marked as nested", () => {
+    const fakePath = "../fake/NestedFunctionStructure.js";
+    const code = `
+    function ParentComponent() {
+      function ChildComponent() {
+        return <span>Nested function-defined</span>;
+      }
+
+      return <ChildComponent />;
+    }
+  `;
+
+    const result = parseCode(code, fakePath);
+
+    // Assert both components are detected
+    expect(Object.keys(result)).toContain(`ParentComponent::${fakePath}`);
+    expect(Object.keys(result)).toContain(`ChildComponent::${fakePath}`);
+
+    // Assert nested flag is set
+    expect(result[`ChildComponent::${fakePath}`].nested).toBe(true);
+
+    // Assert function is tracked in parent metadata
+    const parentFunctions =
+      result[`ParentComponent::${fakePath}`].internal.functions;
+    expect(parentFunctions).toContain("ChildComponent");
   });
 });
 

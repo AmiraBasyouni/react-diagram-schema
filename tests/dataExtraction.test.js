@@ -2,22 +2,6 @@
 const parseCode = require("../src/parseCode");
 
 describe("Data Extraction", () => {
-  test("extracts props from a component", () => {
-    const fakePath = "../fake/PropsComponent.js";
-    const code = `
-      function PropsComponent({ title, count }) {
-        return <h1>{title} {count}</h1>;
-      }
-    `;
-
-    const result = parseCode(code, fakePath);
-    const component = result[`PropsComponent::${fakePath}`];
-
-    expect(component.external.props).toEqual(
-      expect.arrayContaining(["title", "count"]),
-    );
-  });
-
   test("extracts state variables from a component", () => {
     const fakePath = "../fake/StateComponent.js";
     const code = `
@@ -36,6 +20,47 @@ describe("Data Extraction", () => {
         ["count", "setCount"],
         ["theme", "setTheme"],
       ]),
+    );
+  });
+
+  test("extracts internal functions (defined and inline) from component", () => {
+    const fakePath = "../fake/FunctionExtraction.js";
+    const code = `
+    function FunctionExtraction() {
+      function handleClick() {
+        console.log("clicked");
+      }
+
+      const handleSubmit = () => {
+        console.log("submitted");
+      }
+
+      return <div onClick={handleClick} />;
+    }
+  `;
+
+    const result = parseCode(code, fakePath);
+    const componentKey = `FunctionExtraction::${fakePath}`;
+    const internalFunctions = result[componentKey]?.internal?.functions;
+
+    expect(Object.keys(result)).toContain(componentKey);
+    expect(internalFunctions).toContain("handleClick");
+    expect(internalFunctions).toContain("handleSubmit");
+  });
+
+  test("extracts props from a component", () => {
+    const fakePath = "../fake/PropsComponent.js";
+    const code = `
+      function PropsComponent({ title, count }) {
+        return <h1>{title} {count}</h1>;
+      }
+    `;
+
+    const result = parseCode(code, fakePath);
+    const component = result[`PropsComponent::${fakePath}`];
+
+    expect(component.external.props).toEqual(
+      expect.arrayContaining(["title", "count"]),
     );
   });
 
