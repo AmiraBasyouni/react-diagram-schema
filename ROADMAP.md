@@ -130,7 +130,12 @@ set up a test suites for component detection and schema structure, data extracti
   - [x] parse named export function declarations
   - [x] parse named export inline components
 
-⌛ Timeline: **completed** August 7, 2025
+**✨ Added Features:**
+
+- **TypeScript Support**: `.ts` and `.tsx` files are now compiled and parsed. Extracting types is planned post-MVP.
+- **Arguments**: The `rootComponentName` is now an optional argument. With this feature, `react-diagram-schema` has become easier to use, without limiting its ability of specifying a component to be parsed.
+
+⌛ Timeline: **completed** August 8, 2025
 
 ## Phase 2: Early Validation
 
@@ -181,7 +186,7 @@ Identify and prioritize the most requested features based on real user feedback 
 
 ✦ Support TypeScript files:
 
-- [ ] Parse `.ts` and `.tsx` files
+- [x] Parse `.ts` and `.tsx` files
 - [ ] Parse types to enable accurate parsing of generics, inferred types, and advanced annotations.
 
 ✦ Adding a flag (e.g., `--group-by-filepath`) to `react-diagram-schema` to group components by directory for modular analysis and visualization:

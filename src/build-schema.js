@@ -33,7 +33,12 @@ if (typeof entryDirectory != "string" || isFile(entryDirectory)) {
     `(build-schema) invalid path "${entryDirectory}", please provide a valid directory as your first argument (e.g. "./src")`,
   );
 }
-if (typeof entryComponentName != "string" || entryComponentName.length === 0) {
+if (
+  typeof entryComponentName === "string" &&
+  !/^[A-Z]/.test(entryComponentName)
+) {
+  // when no component name is provided, assume a default export is available
+  // if component name is provided, guard against invalid component names
   throw new Error(
     `(build-schema) invalid component name "${entryComponentName}", please provide a valid component's name as your second argument (e.g. "App")`,
   );

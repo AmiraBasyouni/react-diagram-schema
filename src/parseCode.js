@@ -3,6 +3,9 @@ const parser = require("@babel/parser");
 const traverse = require("@babel/traverse").default;
 const isInlineReactComponent = require("./utils/isInlineReactComponent");
 const isFunctionDefinedReactComponent = require("./utils/isFunctionDefinedReactComponent");
+const extract_exportDeclarationPaths = require("./utils/extract_exportDeclarationPaths");
+const extract_exportVariableDeclaratorPaths = require("./utils/extract_exportVariableDeclaratorPaths");
+const extract_exportFunctionDeclarationPaths = require("./utils/extract_exportFunctionDeclarationPaths");
 const extractMetadata = require("./utils/extractMetadata.js");
 
 /* Build the following schema structure
@@ -49,14 +52,9 @@ function parseCode(code, filepath) {
       const program_bodyPath = path.get("body");
 
       // ---- support-exported components -----------------------------------------------------------------
-      // helper function: filter export declarations
-      const isExportDeclaration = (path) =>
-        path.isExportDefaultDeclaration || path.isExportNamedDeclaration;
-
       //EXTRACT export declarations
       const exportDeclarationPaths =
-        program_bodyPath.filter(isExportDeclaration);
-
+        extract_exportDeclarationPaths(program_bodyPath);
       // ---- inline-defined components -----------------------------------------------------------------
 
       //EXTRACT inline REACT-COMPONENTS
@@ -69,12 +67,8 @@ function parseCode(code, filepath) {
         );
 
       //EXTRACT inline export declarations
-      const exportVariableDeclarationPaths = exportDeclarationPaths
-        .map((exportDeclaration) => exportDeclaration.get("declaration"))
-        .filter(isInlineReactComponent);
-      const exportVariableDeclaratorPaths = exportVariableDeclarationPaths.map(
-        (declaration) => declaration.get("declarations")[0],
-      );
+      const exportVariableDeclaratorPaths =
+        extract_exportVariableDeclaratorPaths(exportDeclarationPaths);
 
       //MERGE exports WITH normal inline declarations
       exportVariableDeclaratorPaths.forEach((exportVariable) =>
@@ -95,19 +89,14 @@ function parseCode(code, filepath) {
       );
 
       // ---- function-defined components -----------------------------------------------------------------
-      /*      // helper function: filter function-defined React declarations
-      const isFunctionDefinedReactComponent = (path) =>
-        path.isFunctionDeclaration() && /^[A-Z]/.test(path.node.id.name);
-*/
       //EXTRACT function-defined REACT COMPONENTS
       const functionDefinedComponentPaths = program_bodyPath.filter(
         isFunctionDefinedReactComponent,
       );
 
       //EXTRACT exported function-defined REACT COMPONENTS
-      const exportFunctionDeclarationPaths = exportDeclarationPaths
-        .map((exportDeclaration) => exportDeclaration.get("declaration"))
-        .filter(isFunctionDefinedReactComponent);
+      const exportFunctionDeclarationPaths =
+        extract_exportFunctionDeclarationPaths(exportDeclarationPaths);
 
       //MERGE exports WITH normal function-defined declarations
       exportFunctionDeclarationPaths.forEach((exportFunction) =>

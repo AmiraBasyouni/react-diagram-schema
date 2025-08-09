@@ -22,24 +22,32 @@ function resolveFilePath(directory, importPath, componentName) {
   }
 
   /* create candidate file paths (in order of priority) */
-  const candidateFiles = [
-    path.join(absolutePath, componentName + ".tsx"),
-    path.join(absolutePath, componentName + ".ts"),
-    path.join(absolutePath, componentName + ".jsx"),
-    path.join(absolutePath, componentName + ".js"),
+  const candidateFiles = [];
+  // if componentName was provided, check these file paths:
+  if (componentName) {
+    [
+      path.join(absolutePath, componentName + ".tsx"),
+      path.join(absolutePath, componentName + ".ts"),
+      path.join(absolutePath, componentName + ".jsx"),
+      path.join(absolutePath, componentName + ".js"),
+    ].forEach((path) => candidateFiles.push(path));
+  }
+  // whether or not componentName was provided, check these file paths:
+  [
     path.join(absolutePath, "index.tsx"),
     path.join(absolutePath, "index.ts"),
     path.join(absolutePath, "index.jsx"),
     path.join(absolutePath, "index.js"),
-  ];
+  ].forEach((path) => candidateFiles.push(path));
 
   for (const filePath of candidateFiles) {
     /* if the filePath exists, */
     if (fs.existsSync(filePath)) {
       /* scan the code */
       const code = fs.readFileSync(filePath, "utf-8");
+      const isEntryComponent = true;
       /* if component's declaration is found, */
-      if (componentIsDeclaredInCode(code, componentName)) {
+      if (componentIsDeclaredInCode(code, componentName, isEntryComponent)) {
         /* omit the user's private file structure */
         const relativePath = path.relative(projectRootDir, filePath);
         return relativePath;

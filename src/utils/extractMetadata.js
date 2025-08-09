@@ -161,7 +161,10 @@ function extractMetadata(componentPaths, type, code, filepath) {
 
               // Only add component-like elements (capitalized, not HTML tags)
               if (tagName && /^[A-Z]/.test(tagName)) {
-                if (componentIsDeclaredInCode(code, tagName)) {
+                const isEntryComponent = false;
+                if (
+                  componentIsDeclaredInCode(code, tagName, isEntryComponent)
+                ) {
                   /* and record its declaration line */
                   descendantsMap.set(tagName, {
                     location: {
