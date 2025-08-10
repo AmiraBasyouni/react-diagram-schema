@@ -17,9 +17,9 @@
 
 ## Limitations
 
-This CLI tool currently only supports parsing `.js` / `.jsx` files, with plans to support `.ts` / `.tsx` files in the future. To learn more regarding next steps and future plans, check out the [ROADMAP.md](https://github.com/AmiraBasyouni/react-diagram-schema/blob/main/ROADMAP.md) document.
+This CLI tool currently parses JavaScript (`.js` / `.jsx`) and TypeScript (`.ts` / `.tsx`) files but does not extract additional information from TypeScript files. Extracting types from `.ts` / `.tsx` files is a planned feature that could be introduced in the future. To learn more regarding next steps and future plans, check out the [ROADMAP.md](https://github.com/AmiraBasyouni/react-diagram-schema/blob/main/ROADMAP.md) document.
 
-**Dependencies**
+**Major Dependencies**
 
 - [@babel/parser](https://www.npmjs.com/package/@babel/parser) - Parses JavaScript code into an AST
 - [@babel/traverse](https://www.npmjs.com/package/@babel/traverse) - Walks the AST and extracts component data
@@ -46,45 +46,77 @@ npm install
 npm install -g AmiraBasyouni/react-diagram-schema
 ```
 
+## Arguments
+
+The CLI tool accepts two positional arguments:
+
+1. `<entryDirectory>` (required)  
+   Path to your application's entry directory.  
+   Example: `./src/`
+
+2. `[rootComponentName]` (optional)  
+   Name of the root React component defined in your entry directory’s main file.  
+   If omitted, the tool will attempt to auto-detect the root component automatically.  
+   Example: `App`
+
 ## Usage
 
-**If Not Installed, Use:**
+**If Not Installed,**
+
+run the CLI directly with `npx`:
 
 ```bash
-npx AmiraBasyouni/react-diagram-schema ./src/ App
+npx AmiraBasyouni/react-diagram-schema <entryDirectory> [rootComponentName]
 ```
 
-_replace `./src/` with your application's entry directory._  
-_`App` represents the root React component living in your entry directory._
-
----
-
-**If Installed Locally, Use:**  
-generate the test schema within `react-diagram-schema`'s root folder using:
+Example:
 
 ```bash
-./src/build-schema ./sample-components/ App
+npx AmiraBasyouni/react-diagram-schema ./src/components/App/ App
 ```
 
 ---
 
-**If Installed Globally, Use:**  
-generate the schema from any directory using:
+**If Installed Locally,**
+
+run from the project root:
 
 ```bash
-build-schema ./src/ App
+./src/build-schema <entryDirectory> [rootComponentName]
 ```
 
-_replace `./src/` with your application's entry directory._  
-_`App` represents the root React component, defined in the entry directory's main file._
+Example:
+
+```bash
+./src/build-schema ./sample-components/ Button
+```
+
+---
+
+**If Installed Globally,**
+
+run from any directory:
+
+```bash
+build-schema <entryDirectory> [rootComponentName]
+```
+
+Example:
+
+```bash
+build-schema ./ Header
+```
+
+---
 
 ## Example Usage
 
-**Scenario:** You have installed `react-diagram-schema` locally on your device. You are in the repository's root folder.
+**Setup:** You have `react-diagram-schema` installed locally. You are in the repository's root folder.
 
-**You run the command:** `./src/build-schema ./sample-components/ App`
+**Usage:** `./src/build-schema ./sample-components/ App`
 
-**A schema.json file is created containing the following:**
+**Result:**  
+The following `schema.json` file will be created:
 
 ```json
 {
@@ -188,28 +220,27 @@ build-schema ./components/App App --verbose
 ## Troubleshooting
 
 ```
-Error: (build-schema) invalid path "undefined", please provide a valid directory as your first argument (e.g. "./src")
+Error: (build-schema) invalid path "./Button.js", please provide a valid directory as your first argument (e.g. "./src")
 ```
 
 This error could indicate one of the following:
 
-1. you forgot to pass a first argument to the `build-schema` executable.
-2. you passed an invalid first argument to the `build-schema` executable.
+1. you forgot to pass an entry directory as your first argument to the `build-schema` executable.
+2. you passed an invalid entry directory (e.g. you passed a file path instead of a directory) to the `build-schema` executable.
 
 - _**Hint:** Make sure your first argument is a valid directory path (e.g. `./components`)_
 
 ---
 
 ```
-Error: (build-schema) invalid component name "undefined", please provide a valid component's name as your second argument (e.g. "App")
+Error: (build-schema) invalid component name "app", please provide a valid component's name as your second argument (e.g. "App")
 ```
 
 This error could indicate one of the following:
 
-1. you forgot to pass a second argument to the `build-schema` executable.
-2. you passed an invalid second argument to the `build-schema` executable.
+1.  you passed an invalid component name to the `build-schema` executable.
 
-- _**Hint:** Make sure your second argument is the name of the component defined in your main file (e.g. App defined in App.js or ComponentName defined in index.js)_
+- _**Hint:** Make sure your second argument is the name of the component defined in your main file (e.g. App defined in App.js or some ComponentName defined in index.js)_
 
 ---
 
@@ -255,7 +286,7 @@ This warning could indicate one of the following:
   - a component's name
   - description about the component's purpose (which will be integrated using inline comments)
   - a component's descendants (the component's direct children)
-  - a component's location, specifically the file path and declaration line
+  - a component's location (more specifically, the file path and declaration line)
 
 ---
 

@@ -105,7 +105,7 @@ Improve Debugging:
 ### Stage 3: Testing
 
 **🏁 Goal**  
-set up a test suites for component detection and schema structure, data extraction, and edge cases in React Components
+set up test suites for component detection and schema structure, data extraction, and edge cases in React Components
 
 - [x] Validate parsing of function-defined React components
 - [x] Validate parsing of inline arrow function components
