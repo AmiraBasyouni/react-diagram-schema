@@ -48,9 +48,14 @@ if (
 /* DFS Approach for traversing files */
 while (stack.length > 0) {
   const { directory, importPath, componentName } = stack.pop();
-  if (isVerbose) {
+  if (isVerbose && !/^--/.test(entryComponentName)) {
     console.log(
-      `Notice: (build-schema) retrieved directory "${directory}", import path "${importPath}", and component name "${componentName}"`,
+      `Notice: (build-schema) retrieved directory "${directory}", import path "${importPath}"
+	    , and component name "${componentName}"`,
+    );
+  } else if (isVerbose) {
+    console.log(
+      `Notice: (build-schema) retrieved directory "${directory}", import path "${importPath}", and component name ""`,
     );
   }
   const filePath = resolveFilePath(directory, importPath, componentName);
