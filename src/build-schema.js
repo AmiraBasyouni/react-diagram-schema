@@ -35,6 +35,7 @@ if (typeof entryDirectory != "string" || isFile(entryDirectory)) {
 }
 if (
   typeof entryComponentName === "string" &&
+  !/^--/.test(entryComponentName) &&
   !/^[A-Z]/.test(entryComponentName)
 ) {
   // when no component name is provided, assume a default export is available
