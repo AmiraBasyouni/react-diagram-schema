@@ -126,9 +126,11 @@ set up test suites for component detection and schema structure, data extraction
   - [x] nested inline components
   - [x] nested function-defined components
 - [x] Validate parsing exported components
-  - [x] parse default export function declarations
-  - [x] parse named export function declarations
+  - [x] parse default export function components
+  - [x] parse named export function components
   - [x] parse named export inline components
+  - [x] parse anonymous default export function components
+  - [x] parse anonymous default inline components
 
 **✨ Added Features:**
 
