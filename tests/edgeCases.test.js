@@ -1,4 +1,4 @@
-// edge cases
+// edgeCases.test.js
 const parseCode = require("../src/parseCode");
 
 describe("Edge Cases", () => {
@@ -171,5 +171,31 @@ describe("Exports", () => {
     const result = parseCode(code, fakePath);
 
     expect(Object.keys(result)).toContain(`NamedExportInline::${fakePath}`);
+  });
+
+  test("anonymous default export inline component is detected", () => {
+    const fakePath = "../fake/AnonymousInlineDefault.js";
+    const code = `
+    export default () => <div>Anonymous inline default export</div>;
+  `;
+
+    const result = parseCode(code, fakePath);
+
+    // Assert component key exists
+    expect(Object.keys(result)).toContain(`::${fakePath}`);
+  });
+
+  test("anonymous default export function component is detected", () => {
+    const fakePath = "../fake/AnonymousFunctionDefault.js";
+    const code = `
+    export default function () { 
+      return <div>Anonymous function default export</div>;
+    }
+  `;
+
+    const result = parseCode(code, fakePath);
+
+    // Assert component key exists
+    expect(Object.keys(result)).toContain(`::${fakePath}`);
   });
 });
