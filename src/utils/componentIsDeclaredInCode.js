@@ -64,7 +64,7 @@ function componentIsDeclaredInCode(code, componentName, isEntryComponent) {
         // for each component
         componentPaths.forEach((componentPath) => {
           // check if this component's name matches the name given to us as an argument (i.e. content of componentName)
-          if (componentPath.node.id.name === componentName) {
+          if (componentPath.node.id?.name === componentName) {
             // if so, confirm that our component's declaration exists
             returnValue = true;
           }

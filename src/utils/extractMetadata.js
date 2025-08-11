@@ -21,12 +21,11 @@ function extractMetadata(componentPaths, type, code, filepath) {
 
       //--INTERNAL STRUCTURE -----------------------------
       //EXTRACT name AND location
-      obj.name = componentPath.node.id.name;
+      obj.name = componentPath.node.id ? componentPath.node.id.name : "";
       obj.location = {
         line: componentPath.node?.loc.start.line,
         filepath,
       };
-
       const componentInternalPath =
         type === "inline" ? componentPath.get("init") : componentPath;
       const componentExternalPath =
@@ -188,7 +187,7 @@ function extractMetadata(componentPaths, type, code, filepath) {
 
       // helper variable: filter component props from a component's parameter list
       const component_props =
-        componentExternalPath.node.params.length > 0
+        componentExternalPath.node.params?.length > 0
           ? componentExternalPath.node.params[0].properties
           : [];
 

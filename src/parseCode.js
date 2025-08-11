@@ -114,6 +114,23 @@ function parseCode(code, filepath) {
       metadataDefined.forEach(
         (obj) => (components[`${obj.name}::${obj.location.filepath}`] = obj),
       );
+
+      //EXTRACT anonymous inline default export REACT COMPONENTS (e.g. export default () => <></>)
+      const exportDefaultAnonymousDeclarationPath =
+        exportDeclarationPaths.filter(
+          (path) =>
+            path.isExportDefaultDeclaration() &&
+            path.node.declaration?.type === "ArrowFunctionExpression",
+        );
+      const metadataAnonymous = extractMetadata(
+        exportDefaultAnonymousDeclarationPath,
+        "defined",
+        code,
+        filepath,
+      );
+      metadataAnonymous.forEach(
+        (obj) => (components[`::${obj.location.filepath}`] = obj),
+      );
     },
   });
   return components;

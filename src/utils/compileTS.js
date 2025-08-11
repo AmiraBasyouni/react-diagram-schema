@@ -11,8 +11,8 @@ function transpileTSFile(filePath) {
 
   const result = ts.transpileModule(code, {
     compilerOptions: {
-      jsx: ts.JsxEmit.React,
-      module: ts.ModuleKind.CommonJS,
+      jsx: ts.JsxEmit.Preserve,
+      module: ts.ModuleKind.ESNext,
       target: ts.ScriptTarget.ESNext,
     },
     fileName: filePath,
