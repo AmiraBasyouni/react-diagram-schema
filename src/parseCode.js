@@ -116,12 +116,13 @@ function parseCode(code, filepath) {
       );
 
       //EXTRACT anonymous inline default export REACT COMPONENTS (e.g. export default () => <></>)
-      const exportDefaultAnonymousDeclarationPath =
-        exportDeclarationPaths.filter(
+      const exportDefaultAnonymousDeclarationPath = exportDeclarationPaths
+        .filter(
           (path) =>
             path.isExportDefaultDeclaration() &&
             path.node.declaration?.type === "ArrowFunctionExpression",
-        );
+        )
+        .map((path) => path.get("declaration"));
       const metadataAnonymous = extractMetadata(
         exportDefaultAnonymousDeclarationPath,
         "defined",
