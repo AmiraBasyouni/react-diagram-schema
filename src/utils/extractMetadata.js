@@ -132,58 +132,26 @@ function extractMetadata(componentPaths, type, code, filepath) {
         });
         obj.external.context = context;
 
+        //EXTRACT blockstatement COMPONENT DESCENDANTS
         // helper variable: extract component's return statement
-        const component_returnStatementPath = blockStatementBody_array.filter(
+        const component_returnStatementPaths = blockStatementBody_array.filter(
           (path) => path.isReturnStatement(),
         );
 
-        //EXTRACT component descendents
-        const descendantsMap = new Map();
-        component_returnStatementPath.forEach((returnStatement) =>
-          returnStatement.traverse({
-            JSXElement(childPath) {
-              const opening = childPath.node.openingElement;
-
-              // Handle <SomeComponent>
-              let tagName = "";
-              if (opening.name.type === "JSXIdentifier") {
-                tagName = opening.name.name;
-              } else if (opening.name.type === "JSXMemberExpression") {
-                // Handle <Some.Component>
-                // Get only the rightmost name (e.g., Some.Component -> "Component")
-                tagName = opening.name.property.name;
-                if (tagName === "Provider") {
-                  // invalid descendant: ignore Provider, do not add it to the list of descendants
-                  tagName = undefined;
-                }
-              }
-
-              // Only add component-like elements (capitalized, not HTML tags)
-              if (tagName && /^[A-Z]/.test(tagName)) {
-                const isEntryComponent = false;
-                if (
-                  componentIsDeclaredInCode(code, tagName, isEntryComponent)
-                ) {
-                  /* and record its declaration line */
-                  descendantsMap.set(tagName, {
-                    location: {
-                      //line: descendantLocation?.start.line,
-                      filepath,
-                    },
-                  });
-                } else {
-                  obj.unresolvedDescendants.push(tagName);
-                  descendantsMap.set(tagName, {
-                    location: {},
-                  });
-                }
-              }
-            },
-          }),
+        extractComponentDescendants(
+          component_returnStatementPaths[0],
+          filepath,
+          code,
+          obj,
         );
-        obj.descendants = descendantsMap;
       }
+
       // ---- END OF BLOCK STATEMENT CODE ---------------------------------------------
+
+      //EXTRACT non-blockstatement COMPONENT DESCENDANTS (e.g. () => JSX instead of () => {return JSX})
+      if (componentInternalPath.get("body").isJSXElement()) {
+        extractComponentDescendants(componentInternalPath, filepath, code, obj);
+      }
 
       // helper variable: filter component props from a component's parameter list
       const component_props =
@@ -229,6 +197,50 @@ function extractMetadata(componentPaths, type, code, filepath) {
   metadata.push(...nestedInlineComponentsMetadata);
 
   return metadata;
+}
+
+function extractComponentDescendants(returnStatementPath, filepath, code, obj) {
+  //EXTRACT component descendants
+  const descendantsMap = new Map();
+  (returnStatementPath.traverse({
+    JSXElement(childPath) {
+      const opening = childPath.node.openingElement;
+
+      // Handle <SomeComponent>
+      let tagName = "";
+      if (opening.name.type === "JSXIdentifier") {
+        tagName = opening.name.name;
+      } else if (opening.name.type === "JSXMemberExpression") {
+        // Handle <Some.Component>
+        // Get only the rightmost name (e.g., Some.Component -> "Component")
+        tagName = opening.name.property.name;
+        if (tagName === "Provider") {
+          // invalid descendant: ignore Provider, do not add it to the list of descendants
+          tagName = undefined;
+        }
+      }
+
+      // Only add component-like elements (capitalized, not HTML tags)
+      if (tagName && /^[A-Z]/.test(tagName)) {
+        const isEntryComponent = false;
+        if (componentIsDeclaredInCode(code, tagName, isEntryComponent)) {
+          /* and record its declaration line */
+          descendantsMap.set(tagName, {
+            location: {
+              //line: descendantLocation?.start.line,
+              filepath,
+            },
+          });
+        } else {
+          obj.unresolvedDescendants.push(tagName);
+          descendantsMap.set(tagName, {
+            location: {},
+          });
+        }
+      }
+    },
+  }),
+    (obj.descendants = descendantsMap));
 }
 
 module.exports = extractMetadata;
