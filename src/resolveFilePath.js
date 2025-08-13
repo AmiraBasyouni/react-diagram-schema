@@ -13,7 +13,7 @@ function resolveFilePath(directory, importPath, componentName) {
   /* normalize the import path */
   const absolutePath = path.resolve(directory, importPath);
 
-  /* if import path lead directly to a file path, */
+  /* if import path lead directly to a valid file path, */
   if (isFile(absolutePath)) {
     /* omit the user's private file structure */
     const relativePath = path.relative(projectRootDir, absolutePath);
@@ -34,6 +34,10 @@ function resolveFilePath(directory, importPath, componentName) {
   }
   // whether or not componentName was provided, check these file paths:
   [
+    absolutePath + ".tsx",
+    absolutePath + ".ts",
+    absolutePath + ".jsx",
+    absolutePath + ".js",
     path.join(absolutePath, "index.tsx"),
     path.join(absolutePath, "index.ts"),
     path.join(absolutePath, "index.jsx"),

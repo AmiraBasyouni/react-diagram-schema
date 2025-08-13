@@ -16,7 +16,7 @@ function extractMetadata(componentPaths, type, code, filepath) {
         internal: { states: [], functions: [] },
         external: { props: [], context: [], constants: [] },
         location: null,
-        unresolvedDescendants: [],
+        unresolvedDescendants: new Set(),
       };
 
       //--INTERNAL STRUCTURE -----------------------------
@@ -232,7 +232,7 @@ function extractComponentDescendants(returnStatementPath, filepath, code, obj) {
             },
           });
         } else {
-          obj.unresolvedDescendants.push(tagName);
+          obj.unresolvedDescendants.add(tagName);
           descendantsMap.set(tagName, {
             location: {},
           });
@@ -241,6 +241,7 @@ function extractComponentDescendants(returnStatementPath, filepath, code, obj) {
     },
   }),
     (obj.descendants = descendantsMap));
+  obj.unresolvedDescendants = Array.from(obj.unresolvedDescendants);
 }
 
 module.exports = extractMetadata;

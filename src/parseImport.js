@@ -42,9 +42,15 @@ function parseImport(code, descendantName) {
             });
         },
       );
+
       /* if we found an import that matches our descendant's name, */
       if (ourImportStatement_array.length > 0) {
-        returnValue = ourImportStatement_array[0].get("source").node.value;
+        const importSource =
+          ourImportStatement_array[0].get("source").node.value;
+        importSource.startsWith("./") || importSource.startsWith("../")
+          ? (returnValue = importSource)
+          : (returnValue = null);
+        //returnValue = ourImportStatement_array[0].get("source").node.value;
       } else {
         returnValue = null;
       }

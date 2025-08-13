@@ -18,7 +18,7 @@ function generateSchemaFile(
 
   function writeFile() {
     fs.writeFileSync(outputPath, JSON.stringify(schema, null, 2));
-    console.log(`✅ Schema written to: ${outputPath}`);
+    console.log(`💾 Schema written to: ${outputPath}`);
   }
 
   /* if a schema.json file already exists, */
@@ -34,7 +34,7 @@ function generateSchemaFile(
         if (answer.toLowerCase() === "y" || answer.toLowerCase() === "yes") {
           writeFile();
         } else {
-          console.log("Aborted.");
+          console.log("🛑 Aborted.");
         }
         rl.close();
       },
