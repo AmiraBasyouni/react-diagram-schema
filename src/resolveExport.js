@@ -6,7 +6,7 @@ const traverse = require("@babel/traverse").default;
 function resolveExport(symbolName, filePath, visited = new Set()) {
   if (!fs.existsSync(filePath)) return null;
 
-  //console.log(`resolveExport: Looking for "${symbolName}" in ${filePath}`);
+  //console.log(`(resolveExport): Looking for "${symbolName}" in ${filePath}`);
   // Prevent infinite loops on circular re-exports
   const realPath = fs.realpathSync(filePath);
   if (visited.has(realPath)) return null;
@@ -60,26 +60,20 @@ function resolveExport(symbolName, filePath, visited = new Set()) {
           path.resolve(path.dirname(filePath), importRel),
         );
 
-        // A) Exact name: export { <symbolName> } from './...'
-        const direct = node.specifiers.find(
-          (spec) => spec.exported.name === symbolName,
-        );
-        if (direct) {
-          targetPath = resolveExport(symbolName, abs, visited);
-          return;
-        }
-
-        // B) default-as-name: export { default as <symbolName> } from './...'
+        // A) default-as-name: export { default as <symbolName> } from './...'
         const defaultAsName = node.specifiers.find(
           (spec) =>
             spec.local.name === "default" && spec.exported.name === symbolName,
         );
         if (defaultAsName) {
+          //console.log("[default-as-name] symbol:", symbolName);
+          //console.log("[default-as-name] abs before resolveExport:", abs);
           targetPath = resolveExport("default", abs, visited);
+          //console.log("[default-as-name] resolved targetPath:", targetPath);
           return;
         }
 
-        // C) default-as-default: export { default } from './...'
+        // B) default-as-default: export { default } from './...'
         // If caller asked for a non-default name (e.g. "ToastProvider")
         // but this file only re-exports "default", chase the default.
         const defaultAsDefault = node.specifiers.find(
@@ -88,6 +82,15 @@ function resolveExport(symbolName, filePath, visited = new Set()) {
         );
         if (defaultAsDefault && symbolName !== "default") {
           targetPath = resolveExport("default", abs, visited);
+          return;
+        }
+
+        // C) Exact name: export { <symbolName> } from './...'
+        const direct = node.specifiers.find(
+          (spec) => spec.exported.name === symbolName,
+        );
+        if (direct) {
+          targetPath = resolveExport(symbolName, abs, visited);
           return;
         }
       } else if (node.declaration) {
