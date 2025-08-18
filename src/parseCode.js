@@ -94,11 +94,18 @@ function parseCode(code, filepath) {
         isFunctionDefinedReactComponent,
       );
 
-      //EXTRACT exported function-defined REACT COMPONENTS
+      //EXTRACT export named function declaration REACT COMPONENTS
       const exportFunctionDeclarationPaths =
         extract_exportFunctionDeclarationPaths(exportDeclarationPaths);
+      //EXTRACT export default declaration REACT COMPONENTS
+      const isDefaultExport_true = true;
+      const exportDefaultDeclarationPaths =
+        extract_exportFunctionDeclarationPaths(
+          exportDeclarationPaths,
+          isDefaultExport_true,
+        );
 
-      //MERGE exports WITH normal function-defined declarations
+      //MERGE named exports WITH normal function-defined declarations
       exportFunctionDeclarationPaths.forEach((exportFunction) =>
         functionDefinedComponentPaths.push(exportFunction),
       );
@@ -110,6 +117,17 @@ function parseCode(code, filepath) {
         code,
         filepath,
       );
+      //EXTRACT metadata FROM export default COMPONENTS
+      const metadataDefault = extractMetadata(
+        exportDefaultDeclarationPaths,
+        "defined",
+        code,
+        filepath,
+        isDefaultExport_true,
+      );
+
+      //MERGE export default declaration with named declarations
+      metadataDefault.forEach((f) => metadataDefined.push(f));
       //APPEND COMPONENT-LOGIC TO SCHEMA
       metadataDefined.forEach(
         (obj) => (components[`${obj.name}::${obj.location.filepath}`] = obj),
@@ -128,6 +146,7 @@ function parseCode(code, filepath) {
         "defined",
         code,
         filepath,
+        isDefaultExport_true,
       );
       metadataAnonymous.forEach(
         (obj) => (components[`::${obj.location.filepath}`] = obj),

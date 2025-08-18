@@ -3,7 +3,13 @@ const componentIsDeclaredInCode = require("./componentIsDeclaredInCode");
 const isFunctionDefinedReactComponent = require("./isFunctionDefinedReactComponent");
 const isInlineReactComponent = require("./isInlineReactComponent");
 
-function extractMetadata(componentPaths, type, code, filepath) {
+function extractMetadata(
+  componentPaths,
+  type,
+  code,
+  filepath,
+  defaultExport = false,
+) {
   const nestedFunctionDefinedComponents = [];
   const nestedInlineComponents = [];
   //EXTRACT { name: "", internal: {states: [], functions: []}, location: null } FROM EACH REACT COMPONENT
@@ -15,6 +21,7 @@ function extractMetadata(componentPaths, type, code, filepath) {
         descendants: [],
         internal: { states: [], functions: [] },
         external: { props: [], context: [], constants: [] },
+        defaultExport,
         location: null,
         unresolvedDescendants: new Set(),
       };

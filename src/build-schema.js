@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* (build-schema.js) Traverses all files starting from entry point to build full schema structure */
 
 /* imports */
 const path = require("path");
@@ -6,10 +7,13 @@ const parseCode = require("./parseCode");
 const resolveFilePath = require("./resolveFilePath");
 const readSourceFile = require("./readSourceFile");
 const parseImport = require("./parseImport");
+const resolveImport = require("./resolveImport");
+const resolveComponent = require("./resolveComponent");
 const generateSchemaFile = require("./generateSchema");
 const isFile = require("./utils/isFile");
+const getDirectoryFromFilePath = require("./utils/getDirectoryFromFilePath");
+const getRelativeFromAbsolutePath = require("./utils/getRelativeFromAbsolutePath");
 
-/* (build-schema.js) Traverses all files starting from entry point to build full schema structure */
 /* initializing variables */
 const warnings = []; // array to collect warnings related to insufficient data
 const components = {};
@@ -38,7 +42,7 @@ if (isQuiet) {
   verbosityLevel = VERBOSITY.normal;
 }
 
-// When logging:
+// For logging messages:
 function log(message, level = verbosityLevel.normal, type = "log") {
   if (level <= verbosityLevel && console[type]) console[type](message);
 }
@@ -48,19 +52,24 @@ const entryDirectory = process.argv[2]; //const { code, filename } = readSourceF
 const entryImportPath = "./";
 const entryComponentName = process.argv[3];
 stack.push({
-  directory: entryDirectory,
+  directory: isFile(entryDirectory)
+    ? getDirectoryFromFilePath(entryDirectory)
+    : entryDirectory,
   importPath: entryImportPath,
   componentName:
     entryComponentName && entryComponentName.startsWith("--")
       ? ""
       : entryComponentName,
 });
-/* guard against invalid inputs */
+/* guard against invalid user input: Entry Directory */
+/*
 if (typeof entryDirectory != "string" || isFile(entryDirectory)) {
   throw new Error(
     `(build-schema) invalid path "${entryDirectory}", please provide a valid directory as your first argument (e.g. "./src")`,
   );
 }
+*/
+/* guard against invalid user input: Entry Component Name */
 if (
   typeof entryComponentName === "string" &&
   !/^--/.test(entryComponentName) &&
@@ -75,17 +84,22 @@ if (
 
 // START TIMER
 const start = process.hrtime();
+
 /* DFS Approach for traversing files */
 while (stack.length > 0) {
-  const { directory, importPath, componentName = "" } = stack.pop();
+  const { directory, importPath = "./", componentName = "" } = stack.pop();
   log(`Parsing ${componentName}...`, VERBOSITY.verbose);
   log(
     `(build-schema) retrieved directory "${directory}", import path "${importPath}", and component name ${componentName}`,
     VERBOSITY.verbose,
   );
-  const filePath = resolveFilePath(directory, importPath, componentName);
+  const relativeFilePath = resolveFilePath(
+    directory,
+    importPath,
+    componentName,
+  );
   /* guard against resolveFilePath failure */
-  if (!filePath) {
+  if (!relativeFilePath) {
     log(
       `(build-schema) could not resolve the file path from directory "${directory}" with the import path "${importPath}" for component "${componentName}"`,
       VERBOSITY.verbose,
@@ -94,16 +108,16 @@ while (stack.length > 0) {
     continue;
   }
   /* guard against repeating visits (e.g. in the case of two components importing one another) */
-  if (filesVisited.has(filePath)) {
+  if (filesVisited.has(relativeFilePath)) {
     continue;
   }
-  filesVisited.set(filePath, true);
-  const code = readSourceFile(filePath);
-  const schema = parseCode(code, filePath);
+  filesVisited.set(relativeFilePath, true);
+  const code = readSourceFile(relativeFilePath);
+  const schema = parseCode(code, relativeFilePath);
   /* guard against parseCode failure */
   if (!schema) {
     log(
-      `(build-schema) failed to parse component "${componentName}" stored in the file "${filePath}"`,
+      `(build-schema) failed to parse component "${componentName}" stored in the file "${relativeFilePath}"`,
       VERBOSITY.verbose,
       "warn",
     );
@@ -111,38 +125,52 @@ while (stack.length > 0) {
   }
   /* account for when multiple components are defined in the same file */
   Object.values(schema).forEach((component) => {
-    components[`${component.name}::${filePath}`] = component;
+    component.defaultExport
+      ? (components[`${componentName}::${relativeFilePath}`] = component)
+      : (components[`${component.name}::${relativeFilePath}`] = component);
   });
   /* for each of the component's descendants whose declaration could not be found, */
   Object.values(schema).forEach((component) => {
     component.unresolvedDescendants.forEach((unresolvedDescendant) => {
       /* collect the descendant's import statement */
       const descendantImportPath = parseImport(code, unresolvedDescendant);
-      /* guard against a descendant missing its import statement */
+
+      /* resolve descendant's import to an absolute file path */
+      const resolvedImport_AbsoluteFilePath = resolveComponent(
+        unresolvedDescendant,
+        //resolveImport(
+        path.resolve(process.cwd(), relativeFilePath),
+        descendantImportPath,
+      );
+
+      /* resolve descendant's import to a relative file path */
+      const resolvedImport_RelativeFilePath = getRelativeFromAbsolutePath(
+        resolvedImport_AbsoluteFilePath,
+      );
+
+      /* guard against a descendant missing its import statement (or with an invalid import) */
       if (!descendantImportPath) {
         warnings.push(
-          `WARNING: (build-schema) the descendant "${unresolvedDescendant}" of component "${componentName}" could not be resolved within the file "${filePath}"`,
+          `WARNING: (build-schema) the descendant "${unresolvedDescendant}" of component "${componentName}" could not be resolved within the file "${relativeFilePath}"`,
         );
       } else {
         /* update component's descendant's file path */
-        const descendantFilePath = resolveFilePath(
-          directory,
-          descendantImportPath,
-          unresolvedDescendant,
-        );
         component.descendants.set(unresolvedDescendant, {
-          location: { filepath: descendantFilePath },
+          location: { filepath: resolvedImport_RelativeFilePath },
         });
-        /* plan on visiting this descendant */
-        log(
-          `(build-schema) planning to visit directory "${directory}", with import path "${descendantImportPath}", to resolve "${unresolvedDescendant}"`,
-          VERBOSITY.verbose,
-        );
-        stack.push({
-          directory: path.join(directory, descendantImportPath),
-          importPath: "./",
-          componentName: unresolvedDescendant,
-        });
+
+        if (resolvedImport_RelativeFilePath) {
+          /* plan on visiting this descendant */
+          log(
+            `(build-schema) planning to visit "${resolvedImport_RelativeFilePath}" to resolve "${unresolvedDescendant}"`,
+            VERBOSITY.verbose,
+          );
+          stack.push({
+            directory: resolvedImport_RelativeFilePath,
+            importPath: "./",
+            componentName: unresolvedDescendant,
+          });
+        }
       }
     });
     /* clear and hide unresolvedDescendants from JSON file output */
