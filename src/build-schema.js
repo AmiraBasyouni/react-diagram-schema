@@ -13,6 +13,7 @@ const generateSchemaFile = require("./generateSchema");
 const isFile = require("./utils/isFile");
 const getDirectoryFromFilePath = require("./utils/getDirectoryFromFilePath");
 const getRelativeFromAbsolutePath = require("./utils/getRelativeFromAbsolutePath");
+const getAlias = require("./utils/getAlias");
 
 /* initializing variables */
 const warnings = []; // array to collect warnings related to insufficient data
@@ -124,10 +125,19 @@ while (stack.length > 0) {
     continue;
   }
   /* account for when multiple components are defined in the same file */
+  // create Unique IDs
   Object.values(schema).forEach((component) => {
-    component.defaultExport
-      ? (components[`${componentName}::${relativeFilePath}`] = component)
-      : (components[`${component.name}::${relativeFilePath}`] = component);
+    const alias = getAlias(code, component.name);
+    // UID for default exported component is the component's imported name
+    if (component.defaultExport) {
+      components[`${componentName}::${relativeFilePath}`] = component;
+      // UID for imported components that have an alias uses alias when available
+    } else if (alias) {
+      components[`${alias}::${relativeFilePath}`] = component;
+      // UID for all other components uses the assigned name of that component
+    } else {
+      components[`${component.name}::${relativeFilePath}`] = component;
+    }
   });
   /* for each of the component's descendants whose declaration could not be found, */
   Object.values(schema).forEach((component) => {
