@@ -33,10 +33,23 @@ function extractMetadata(
         line: componentPath.node?.loc.start.line,
         filepath,
       };
-      const componentInternalPath =
-        type === "inline" ? componentPath.get("init") : componentPath;
-      const componentExternalPath =
-        type === "inline" ? componentPath.get("init") : componentPath;
+
+      // helper function: corrects scope of componentPath based on type
+      function getCorrectComponentPath(componentPath) {
+        let component_path = componentPath;
+        if (type === "inline") {
+          component_path = componentPath.get("init");
+          if (
+            component_path.node.type === "CallExpression" &&
+            component_path.node.callee.name === "forwardRef"
+          ) {
+            component_path = component_path.get("arguments")[0];
+          }
+        }
+        return component_path;
+      }
+      const componentInternalPath = getCorrectComponentPath(componentPath);
+      const componentExternalPath = getCorrectComponentPath(componentPath);
 
       //-- IF BLOCK STATEMENT EXISTS (guards against omitted block statement  () =><h1>JSX</h1>) ------------------------
       if (componentInternalPath.get("body").isBlockStatement()) {

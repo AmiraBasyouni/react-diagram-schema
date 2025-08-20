@@ -3,15 +3,21 @@
 function isInlineReactComponent(program_bodyPath) {
   // 1) helper function: filter variable declarations to select React inline declared React components
   const isInlineReactComponent = (path) => {
-    // WARNING: .get() is eager — it can be called before && can decide to skip it.
+    // WARNING: .get() is eager — it can be called before &&. Thus, conditional statements won't be resolved in the expected order.
     if (!path.isVariableDeclaration()) {
       return false;
     }
-    // this structure ensures that the "type" property is checked only when the previous condition is true
+    // by separating the conditions with an if statement,
+    // we ensure that the "type" property is checked only when the previous condition is true
+    const inlineDeclaration = path.get("declarations")[0];
+
     return (
-      path.get("declarations")[0]?.node.init.type ===
-        "ArrowFunctionExpression" &&
-      /^[A-Z]/.test(path.get("declarations")[0].node.id.name)
+      (inlineDeclaration?.node.init.type === "ArrowFunctionExpression" ||
+        (inlineDeclaration?.node.init.type === "CallExpression" &&
+          inlineDeclaration?.node.init.callee.name === "forwardRef" &&
+          inlineDeclaration?.node.init.arguments[0].type ===
+            "ArrowFunctionExpression")) &&
+      /^[A-Z]/.test(inlineDeclaration.node.id.name)
     );
   };
   return isInlineReactComponent(program_bodyPath);
