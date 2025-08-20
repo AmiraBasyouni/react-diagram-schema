@@ -173,22 +173,30 @@ function extractMetadata(
         extractComponentDescendants(componentInternalPath, filepath, code, obj);
       }
 
-      // helper variable: filter component props from a component's parameter list
-      const component_props =
-        componentExternalPath.node.params?.length > 0
-          ? componentExternalPath.node.params[0].properties
-          : [];
-
       //EXTRACT externally defined props -> ["propA", "propB", "propC", ...]
-      obj.external.props = component_props?.map((object) => {
-        if (object.type === "ObjectProperty") {
-          //CASE: prop type is an ObjectProperty
-          return object.key.name;
-        } else if (object.type === "RestElement") {
-          // CASE: prop type is a RestElement
-          return `...${object.argument.name}`;
-        }
-      });
+      // if component contains parameters, parse them
+      if (componentExternalPath.node.params?.length > 0) {
+        const componentParamsArray = componentExternalPath.get("params");
+        // for each parameter
+        componentParamsArray.forEach((param) => {
+          // if the parameter is an object { }
+          if (param.isObjectPattern()) {
+            // extract each prop
+            param.get("properties").forEach((prop) => {
+              if (prop.isObjectProperty()) {
+                //CASE: prop type is an ObjectProperty
+                obj.external.props.push(prop.node.key.name);
+              } else if (prop.isRestElement()) {
+                // CASE: prop type is a RestElement
+                obj.external.props.push(`...${prop.node.argument.name}`);
+              }
+            });
+            // if the parameter is an identifier (e.g. ref)
+          } else if (param.isIdentifier()) {
+            obj.external.props.push(param.node.name);
+          }
+        });
+      }
 
       //obj.descendants = Array.from(descendantsMap.entries()).map(
       //  ([name, metadata]) => ({ name, ...metadata }),

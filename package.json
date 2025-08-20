@@ -4,7 +4,7 @@
   "description": "Takes React components as input and returns a schema as output.",
   "main": "build-schema.js",
   "scripts": {
-    "test": "jest",
+    "test": "npx jest ./tests/",
     "commit": "./scripts/generate-commit-msg.sh",
     "lint": "npx eslint . --fix",
     "format": "npx prettier . --write"
