@@ -7,10 +7,10 @@ const parseCode = require("./parseCode");
 const resolveFilePath = require("./resolveFilePath");
 const readSourceFile = require("./readSourceFile");
 const parseImport = require("./parseImport");
-//const resolveImport = require("./resolveImport");
 const resolveComponent = require("./resolveComponent");
 const generateSchemaFile = require("./generateSchema");
 const isFile = require("./utils/isFile");
+const fs = require("fs");
 const getDirectoryFromFilePath = require("./utils/getDirectoryFromFilePath");
 const getRelativeFromAbsolutePath = require("./utils/getRelativeFromAbsolutePath");
 const getAlias = require("./utils/getAlias");
@@ -62,14 +62,17 @@ stack.push({
       ? ""
       : entryComponentName,
 });
-/* guard against invalid user input: Entry Directory */
-/*
-if (typeof entryDirectory != "string" || isFile(entryDirectory)) {
+/* guard against invalid user input: <entryDirectory|entryFile> */
+
+if (
+  typeof entryDirectory != "string" ||
+  (!isFile(entryDirectory) && !fs.existsSync(entryDirectory))
+) {
   throw new Error(
-    `(build-schema) invalid path "${entryDirectory}", please provide a valid directory as your first argument (e.g. "./src")`,
+    `(build-schema) invalid path "${entryDirectory}", please provide a valid directory or file path as your first argument (e.g. "./src")`,
   );
 }
-*/
+
 /* guard against invalid user input: Entry Component Name */
 if (
   typeof entryComponentName === "string" &&
