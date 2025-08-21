@@ -165,7 +165,7 @@ while (stack.length > 0) {
         );
       } else {
         /* update component's descendant's file path */
-        component.descendants.set(unresolvedDescendant, {
+        component.descendants?.set(unresolvedDescendant, {
           location: { filepath: resolvedImport_RelativeFilePath },
         });
 
@@ -185,10 +185,12 @@ while (stack.length > 0) {
     });
     /* clear and hide unresolvedDescendants from JSON file output */
     component.unresolvedDescendants = undefined;
-    // transform component descendants from type Map to type Array
-    component.descendants = Array.from(component.descendants.entries()).map(
-      ([name, metadata]) => `${name}::${metadata.location.filepath}`,
-    );
+    if (!component.provider) {
+      // transform component descendants from type Map to type Array
+      component.descendants = Array.from(component.descendants.entries()).map(
+        ([name, metadata]) => `${name}::${metadata.location.filepath}`,
+      );
+    }
   });
 }
 // END TIMER

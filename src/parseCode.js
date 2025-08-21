@@ -6,7 +6,8 @@ const isFunctionDefinedReactComponent = require("./utils/isFunctionDefinedReactC
 const extract_exportDeclarationPaths = require("./utils/extract_exportDeclarationPaths");
 const extract_exportVariableDeclaratorPaths = require("./utils/extract_exportVariableDeclaratorPaths");
 const extract_exportFunctionDeclarationPaths = require("./utils/extract_exportFunctionDeclarationPaths");
-const extractMetadata = require("./utils/extractMetadata.js");
+const extractMetadata = require("./utils/extractMetadata");
+const handleProviders = require("./utils/handleProviders");
 
 /* Build the following schema structure
  *
@@ -58,8 +59,8 @@ function parseCode(code, filepath) {
       // ---- inline-defined components -----------------------------------------------------------------
 
       //EXTRACT inline REACT-COMPONENTS
-      const inlineComponentDeclarationPaths = program_bodyPath.filter(
-        isInlineReactComponent,
+      const inlineComponentDeclarationPaths = program_bodyPath.filter((p) =>
+        isInlineReactComponent(p),
       );
       const inlineComponentDeclaratorPaths =
         inlineComponentDeclarationPaths.map(
@@ -69,6 +70,27 @@ function parseCode(code, filepath) {
       //EXTRACT inline export declarations
       const exportVariableDeclaratorPaths =
         extract_exportVariableDeclaratorPaths(exportDeclarationPaths);
+
+      //EXTRACT provider
+      const varDeclarators = program_bodyPath
+        .filter((path) => path.isVariableDeclaration())
+        .map((decl) => decl.get("declarations")[0])
+        .filter((p) => p.isVariableDeclarator())
+        .filter((declarator) => declarator.get("init").isMemberExpression);
+      const exportVarDeclarators = exportDeclarationPaths
+        .filter((path) => path.get("declaration").isVariableDeclaration())
+        .map((p) => p.get("declaration").get("declarations")[0])
+        .filter((p) => p.isVariableDeclarator())
+        .filter((declarator) => declarator.get("init").isMemberExpression);
+      const providers = handleProviders(
+        [...varDeclarators, ...exportVarDeclarators],
+        filepath,
+      );
+      providers.forEach(
+        (provider) =>
+          (components[`${provider.name}::${provider.location.filepath}`] =
+            provider),
+      );
 
       //MERGE exports WITH normal inline declarations
       exportVariableDeclaratorPaths.forEach((exportVariable) =>
@@ -90,8 +112,8 @@ function parseCode(code, filepath) {
 
       // ---- function-defined components -----------------------------------------------------------------
       //EXTRACT function-defined REACT COMPONENTS
-      const functionDefinedComponentPaths = program_bodyPath.filter(
-        isFunctionDefinedReactComponent,
+      const functionDefinedComponentPaths = program_bodyPath.filter((p) =>
+        isFunctionDefinedReactComponent(p),
       );
 
       //EXTRACT export named function declaration REACT COMPONENTS
