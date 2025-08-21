@@ -13,7 +13,7 @@ function extract_exportFunctionDeclarationPaths(
       : exportDeclarationPaths.filter((path) => path.isExportNamedDeclaration())
   )
     .map((exportDeclaration) => exportDeclaration.get("declaration"))
-    .filter(isFunctionDefinedReactComponent);
+    .filter((p) => isFunctionDefinedReactComponent(p));
 
   return exportFunctionDeclarationPaths;
 }

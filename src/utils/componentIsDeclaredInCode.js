@@ -43,8 +43,8 @@ function componentIsDeclaredInCode(code, componentName, isEntryComponent) {
 
       //---- inline React components ------------------------------------------------------------------
       //EXTRACT inline REACT COMPONENTS
-      const inlineComponentDeclarationPaths = program_bodyPath.filter(
-        isInlineReactComponent,
+      const inlineComponentDeclarationPaths = program_bodyPath.filter((p) =>
+        isInlineReactComponent(p),
       );
       const inlineComponentDeclaratorPaths =
         inlineComponentDeclarationPaths.map(
@@ -74,8 +74,8 @@ function componentIsDeclaredInCode(code, componentName, isEntryComponent) {
 
       //----function-defined components ----------------------------------------------------------------------
       //EXTRACT function-defined REACT-COMPONENTS
-      const functionDefinedComponentPaths = program_bodyPath.filter(
-        isFunctionDefinedReactComponent,
+      const functionDefinedComponentPaths = program_bodyPath.filter((p) =>
+        isFunctionDefinedReactComponent(p),
       );
 
       //EXTRACT exported function-defined REACT COMPONENTS

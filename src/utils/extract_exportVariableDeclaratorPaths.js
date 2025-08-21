@@ -5,7 +5,8 @@ function extract_exportVariableDeclaratorPaths(exportDeclarationPaths) {
   //EXTRACT inline export declarations
   const exportVariableDeclarationPaths = exportDeclarationPaths
     .map((exportDeclaration) => exportDeclaration.get("declaration"))
-    .filter(isInlineReactComponent);
+    .filter((p) => isInlineReactComponent(p));
+
   const exportVariableDeclaratorPaths = exportVariableDeclarationPaths.map(
     (declaration) => declaration.get("declarations")[0],
   );

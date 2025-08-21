@@ -21,15 +21,6 @@ function isInlineReactComponent(program_bodyPath) {
     );
   };
   return isInlineReactComponent(program_bodyPath);
-  /*
-  //EXTRACT inline REACT-COMPONENTS
-  // 2) extract inline React components 
-  const inlineComponentDeclarationPaths = program_bodyPath.filter(
-    isInlineReactComponent,
-  );
-  return inlineComponentDeclarationPaths.map(
-    (declaration) => declaration.get("declarations")[0],
-  );*/
 }
 
 module.exports = isInlineReactComponent;
