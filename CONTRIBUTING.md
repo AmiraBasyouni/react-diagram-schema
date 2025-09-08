@@ -62,15 +62,15 @@ Small fixes (typos, minor code tweaks) can skip this step.
 ## Coding Standards
 
 - **Formatting**: We use Prettier and ESLint. Run `npm run lint` and `npm run format` before submitting.
-- **File Naming**: camelCase for utilities, and kebab-case for core modules.
+- **File Naming**: use camelCase for utility helpers (e.g., parseCode.js), and kebab-case for core modules (e.g., build-schema.js).
 - **Schema Shape**: Keep the structure consistent with the current spec:
 
-   ```js
-   {"ComponentName::filepath": {"name": "App", "descendants": ["Header"], "location": {"line": 7}}}
-   ```
+  ```js
+  {"ComponentName::filepath": {"name": "App", "descendants": ["Header"], "location": {"line": 7}}}
+  ```
 
-   Note  
-   🗒 This is a simplified example.
+  Note  
+   🗒 This is a simplified example.  
    🗒 To see the full schema specification, visit [ROADMAP.md](https://github.com/AmiraBasyouni/react-diagram-schema).
 
 ## Pull Requests
@@ -81,8 +81,11 @@ Small fixes (typos, minor code tweaks) can skip this step.
    git checkout -b fix-bug-header
    ```
 
+   Note  
+   🗒 replace `fix-bug-header` with a branch name related to the fix or feature you'd like to implement.
+
 2. **Write commits in [Conventional Commits](https://www.conventionalcommits.org/) style**:  
-   Use a prefix like `fix`, `feat`, or `docs`, followed by the scope (choose a relevant scope, such as `extractMetadata`, `readme`) and add a brief description.
+   Use a prefix like `fix`, `feat`, `chore`, or `docs`, followed by the scope (e.g. `extractMetadata`, `readme`) and add a brief description.
 
    Examples:
 
@@ -92,11 +95,11 @@ Small fixes (typos, minor code tweaks) can skip this step.
 
 3. **Push** your branch and open a pull request on GitHub.
 
-4. Include **screenshots or schema output** in your pull request if your changes affect parsing or visualization (e.g., new schema fields or diagram updates).
+4. Include **screenshots or schema output** in your pull request if your changes affect the schema structure or visualization (e.g., new schema fields or diagram updates).
 
 ## Testing your Changes
 
-`react-diagram-schema` includes an automated test suite powered by [Jest](https://jestjs.io/)
+`react-diagram-schema` includes an automated test suite powered by [Jest](https://jestjs.io/).
 
 **Running the tests**
 
@@ -108,9 +111,12 @@ npm test
 
 To run a specific test file:
 
-  ```bash
-  npx jest test/components.test.jsx
-  ```
+```bash
+npx jest tests/components.test.jsx
+```
+
+Note  
+🗒 This command assumes you are at the root directory.
 
 ---
 
@@ -208,7 +214,7 @@ Automated tests catch most issues, but you can also test the CLI manually.
 
    Note  
    🗒 The `playground/` directory will be ignored.  
-   🗒 Changes made to the `playground/` directory should not be committed.
+   🗒 Changes made to the `playground/` directory will not be committed.
 
 ---
 
@@ -224,7 +230,7 @@ Automated tests catch most issues, but you can also test the CLI manually.
 
    Note  
    🗒 The symbolic link makes `react-diagram-schema` globally accessible.  
-   🗒 To view npm links, run `npm ls -g --link`.  
+   🗒 To view npm links, run `npm ls -g --depth=0 --link=true`.  
    🗒 After testing, you can remove the link by running `npm unlink -g react-diagram-schema`.
 
 3. Leave `react-diagram-schema`'s root directory (in other words, go one level up):
@@ -250,7 +256,7 @@ Automated tests catch most issues, but you can also test the CLI manually.
 
 6. Open and inspect the generated `schema.json` file from your current working directory.
 
-   Note
+   Note  
    🗒 The parser writes `schema.json` to the current working directory (where you ran the command).
 
    Check for:
@@ -309,11 +315,11 @@ You can visualize `schema.json` using [react-diagram-visualizer](https://github.
 
 ## New to Open Source?
 
-Start with small tasks like improving error messages (e.g., ‘Invalid path’) or fixing typos in docs.
+Start with small tasks like improving error messages or fixing typos in docs.
 
 ## Roadmap & Features
 
-To view planned features and priorities, visit the [ROADMAP.md](https://github.com/AmiraBasyouni/react-diagram-schema/blob/main/ROADMAP.md) file.  
+To view planned features and priorities, visit the [ROADMAP.md](https://github.com/AmiraBasyouni/react-diagram-schema/blob/main/ROADMAP.md) document.
 
 We welcome discussions of new ideas!  
 If you have a suggestion, feel free to open an issue or comment on an existing one.

@@ -17,7 +17,9 @@
 
 ## Limitations
 
-This CLI tool currently parses JavaScript (`.js` / `.jsx`) and TypeScript (`.ts` / `.tsx`) files but does not extract additional information from TypeScript files. Extracting types from `.ts` / `.tsx` files is a planned feature that could be introduced in the future. To learn more regarding next steps and future plans, check out the [ROADMAP.md](https://github.com/AmiraBasyouni/react-diagram-schema/blob/main/ROADMAP.md) document.
+This CLI tool currently parses JavaScript (`.js` / `.jsx`) and TypeScript (`.ts` / `.tsx`) files but does not extract additional information from TypeScript files.
+
+Extracting types from `.ts` / `.tsx` files is a planned feature that could be introduced in the future. To learn more regarding next steps and future plans, check out the [ROADMAP.md](https://github.com/AmiraBasyouni/react-diagram-schema/blob/main/ROADMAP.md) document.
 
 **Major Dependencies**
 
@@ -51,23 +53,23 @@ npm install -g AmiraBasyouni/react-diagram-schema
 
 The CLI tool accepts two positional arguments:
 
-1. `<entryDirectory>` or `<entryFile>` (required)  
+1. **(required)** `<entryDirectory>` or `<entryFile>`  
    Path to your application's entry directory or entry file.  
    Example: `./src/` or `./src/index.js`
 
-2. `[rootComponentName]` (optional)  
+2. _(optional)_ `[rootComponentName]`  
    Name of the root React component defined in the entry file.  
    If omitted, the tool falls back to the default export,  
-   either from the entry file (if <entryFile> was provided)  
+   either from the entry file (if `<entryFile>` was provided)  
    or an index file (`index.tsx`, `index.ts`, `index.jsx`, or `index.js`)
-   in the entry directory.
+   in the entry directory.  
    Example: `App`
 
 ## Usage
 
 **If Not Installed,**
 
-run the CLI directly with `npx`:
+run on your React source code directly with `npx`:
 
 ```bash
 npx AmiraBasyouni/react-diagram-schema <entryDirectory|entryFile> [rootComponentName]
@@ -83,17 +85,29 @@ npx AmiraBasyouni/react-diagram-schema ./src/components/App/ App
 
 **If Installed Locally,**
 
-run from the project root:
+1. Navigate to `react-diagram-schema`'s root directory:
 
-```bash
-./src/build-schema <entryDirectory|entryFile> [rootComponentName]
-```
+   ```bash
+   cd react-diagram-schema
+   ```
 
-Example:
+2. Create a symbolic link:
 
-```bash
-./src/build-schema ./sample-components/ Button
-```
+   ```bash
+   npm link
+   ```
+
+3. Navigate to your React project's directory and generate your schema.
+
+   Example:
+
+   ```bash
+   cd ../xyflow/examples/react/src/App/
+   ```
+
+   ```bash
+   build-schema ./
+   ```
 
 ---
 
@@ -115,21 +129,23 @@ build-schema ./Header.jsx Header
 
 ## Example Usage
 
-**Setup:** `react-diagram-schema` is installed locally, and the current working directory is the repository root.
+**Setup**  
+Imagine `react-diagram-schema` is installed locally, and the current working directory is the repository root.
 
-**Command:** `./src/build-schema ./sample-components/ App`
+**Command**  
+`./src/build-schema ./sample-components/ App`
 
-**Result:**  
+**Result**  
 The command generates a `schema.json` file with the following structure:
 
 ```json
 {
-  "App::../sample-components/App.js": {
+  "App::sample-components/App.js": {
     "name": "App",
     "description": "",
     "descendants": [
-      "Header::../sample-components/Header.js",
-      "Content::../sample-components/App.js"
+      "Header::sample-components/Header.js",
+      "Content::sample-components/App.js"
     ],
     "internal": {
       "states": [
@@ -152,12 +168,13 @@ The command generates a `schema.json` file with the following structure:
       ],
       "constants": []
     },
+    "defaultExport": false,
     "location": {
       "line": 7,
-      "filepath": "../sample-components/App.js"
+      "filepath": "sample-components/App.js"
     }
   },
-  "Content::../sample-components/App.js": {
+  "Content::sample-components/App.js": {
     "name": "Content",
     "description": "",
     "descendants": [],
@@ -170,12 +187,33 @@ The command generates a `schema.json` file with the following structure:
       "context": [],
       "constants": []
     },
+    "defaultExport": false,
     "location": {
       "line": 43,
-      "filepath": "../sample-components/App.js"
+      "filepath": "sample-components/App.js"
     }
   },
-  "Header::../sample-components/Header.js": {
+  "B::sample-components/App.js": {
+    "name": "B",
+    "description": "",
+    "descendants": [],
+    "internal": {
+      "states": [],
+      "functions": ["C"]
+    },
+    "external": {
+      "props": ["color"],
+      "context": [],
+      "constants": []
+    },
+    "defaultExport": false,
+    "location": {
+      "line": 17,
+      "filepath": "sample-components/App.js"
+    },
+    "nested": true
+  },
+  "Header::sample-components/Header.js": {
     "name": "Header",
     "description": "",
     "descendants": [],
@@ -188,9 +226,10 @@ The command generates a `schema.json` file with the following structure:
       "context": [],
       "constants": []
     },
+    "defaultExport": false,
     "location": {
       "line": 3,
-      "filepath": "../sample-components/Header.js"
+      "filepath": "sample-components/Header.js"
     }
   }
 }
@@ -205,7 +244,7 @@ The generated schema can also be passed to custom tools for further analysis.
 ## Flags
 
 **Quiet**  
-Purpose: mutes error and warning console messages, showing only success messages. Major errors will be printed when the program fails to run.
+Purpose: suppresses error and warning console messages, showing only success messages. Critical errors will still be printed if the program fails to run.
 Usage: append `--quiet` to the end of your command like so:
 
 ```bash
@@ -230,9 +269,25 @@ build-schema ./components/App App --debug
 
 ## Troubleshooting
 
-❌ **Error:** invalid path  
+❕ **Empty Schema**
 
-**Message:**
+**Message**
+
+```
+✅ Parsed 0 components from 0 files in 0.252575 milliseconds
+```
+
+Tips:
+
+- If the entry file does not contain a default export, ensure the `[rootComponentName]` field is provided.
+
+---
+
+❌ **Error**  
+invalid path
+
+**Message**
+
 ```
 Error: (build-schema) invalid path "undefined", please provide a valid directory or file path as your first argument (e.g. "./src")
 ```
@@ -242,28 +297,33 @@ This error may occur in the following cases:
 1. The first argument to the `build-schema` executable was omitted.
 2. An invalid first argument was provided (for example, the file path or directory does not exist).
 
-- _**Hint:** Ensure the current directory and first argument are valid before running `build-schema` (example argument: `./components`)_
+_Hint:_  
+_Ensure the current directory and first argument are valid before running `build-schema` (example argument: `./components`)_
 
 ---
 
-❌ **Error:** invalid component name  
+❌ **Error**  
+invalid component name
 
-**Message:**
+**Message**
+
 ```
-Error: (build-schema) invalid component name "app", please provide a valid component's name as your second argument (e.g. "App")
+Error: (build-schema) invalid component name "app", please provide a valid component name as your second argument (e.g. "App")
 ```
 
 This error may occur in the following cases:
 
-1.  An invalid second argument was provided (note: a component name must start with a capital letter).
+1.  An invalid second argument was provided (e.g. the component name did not start with a capital letter).
 
-- _**Hint:** Ensure the second argument matches the name of the component defined in the entry file (e.g. `ComponentName` defined in `ComponentName.js` or in `index.js`)_
+_Hint:_  
+_Ensure the second argument matches the name of the component defined in the entry file (e.g. `ComponentName` defined in `ComponentName.js` or in `index.js`)_
 
 ---
 
-⚠️ **Warning:** descendant could not be resolved  
+⚠️ **Warning**  
+descendant could not be resolved
 
-**Message:**
+**Message**
 
 ```
 WARNING: (build-schema) the descendant <descendant-name> of component <component-name> could not be resolved within the file <file-path>
@@ -271,10 +331,11 @@ WARNING: (build-schema) the descendant <descendant-name> of component <component
 
 This warning may occur in the following cases:
 
-1. the file indicated in `<file-path>` does not exist or could not be found by the parser.  
-2. the descendant was imported from `node_modules` (if this is the case, then you can safely ignore this warning).
+1. The file indicated in `<file-path>` does not exist or could not be found by the parser.
+2. The descendant was imported from `node_modules` (if this is the case, then you can safely ignore this warning).
 
-- _**Hint:** Look for the file indicated in `<file-path>`_
+_Hint:_  
+_Look for the file indicated in `<file-path>`_
 
 ## About JSON Schema
 
@@ -313,4 +374,4 @@ Please visit [CONTRIBUTING.md](https://github.com/AmiraBasyouni/react-diagram-sc
 
 ## License
 
-[MIT](https://raw.githubusercontent.com/AmiraBasyouni/react-diagram-schema/refs/heads/main/LICENSE.md)
+[MIT](https://github.com/AmiraBasyouni/react-diagram-schema/blob/main/LICENSE.md)

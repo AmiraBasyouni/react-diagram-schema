@@ -82,7 +82,7 @@ if (
   // (when no component name is provided, assume a default export is available)
   // guard against invalid component names (if component name is provided)
   throw new Error(
-    `(build-schema) invalid component name "${entryComponentName}", please provide a valid component's name as your second argument (e.g. "App")`,
+    `(build-schema) invalid component name "${entryComponentName}", please provide a valid component name as your second argument (e.g. "App")`,
   );
 }
 
