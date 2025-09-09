@@ -269,12 +269,12 @@ build-schema ./components/App App --debug
 
 ## Troubleshooting
 
-❕ **Empty Schema**
+:heavy_exclamation_mark: **Empty Schema**
 
 **Message**
 
 ```
-✅ Parsed 0 components from 0 files in 0.252575 milliseconds
+✅ Success: Parsed 0 components from 0 files in 0.252575 milliseconds
 ```
 
 Tips:
@@ -283,7 +283,7 @@ Tips:
 
 ---
 
-❌ **Error**  
+:x: **Error**  
 invalid path
 
 **Message**
@@ -302,7 +302,7 @@ _Ensure the current directory and first argument are valid before running `build
 
 ---
 
-❌ **Error**  
+:x: **Error**  
 invalid component name
 
 **Message**
@@ -320,7 +320,7 @@ _Ensure the second argument matches the name of the component defined in the ent
 
 ---
 
-⚠️ **Warning**  
+:warning: **Warning**  
 descendant could not be resolved
 
 **Message**
