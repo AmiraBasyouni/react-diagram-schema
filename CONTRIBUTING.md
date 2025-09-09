@@ -1,13 +1,14 @@
 # Contributing to react-diagram-schema
 
-Thank you for your interest in contributing! 🎉  
+Thank you for your interest in contributing! :tada:  
 `react-diagram-schema` is a standalone CLI tool that generates a JSON schema from React source code, designed to integrate with [`react-diagram-visualizer`](https://github.com/AmiraBasyouni/react-diagram-visualizer) for visualizing [ReactFlow](https://reactflow.dev/)-based UML diagrams. We aim to make React component architecture more **visual, structured, and developer-friendly**, and your help can make a big difference.
 
 ## How to Get Started
 
 1. Fork this repository:
-   - visit [`react-diagram-schema`](https://github.com/AmiraBasyouni/react-diagram-schema)
-   - click Fork at the top right of the repo page
+
+- visit [`react-diagram-schema`](https://github.com/AmiraBasyouni/react-diagram-schema)
+- click Fork at the top right of the repo page
 
    <!--- alternatively, if you have gh set up on your terminal, use the following command:
    ```bash
@@ -22,7 +23,7 @@ Thank you for your interest in contributing! 🎉
    ```
 
    Note  
-   🗒 replace `<your-username>` with your GitHub username.
+   :memo: replace `<your-username>` with your GitHub username.
 
 3. Visit the root directory:
 
@@ -70,8 +71,8 @@ Small fixes (typos, minor code tweaks) can skip this step.
   ```
 
   Note  
-   🗒 This is a simplified example.  
-   🗒 To see the full schema specification, visit [ROADMAP.md](https://github.com/AmiraBasyouni/react-diagram-schema).
+   :memo: This is a simplified example.  
+   :memo: To see the full schema specification, visit [ROADMAP.md](https://github.com/AmiraBasyouni/react-diagram-schema).
 
 ## Pull Requests
 
@@ -82,7 +83,7 @@ Small fixes (typos, minor code tweaks) can skip this step.
    ```
 
    Note  
-   🗒 replace `fix-bug-header` with a branch name related to the fix or feature you'd like to implement.
+   :memo: replace `fix-bug-header` with a branch name related to the fix or feature you'd like to implement.
 
 2. **Write commits in [Conventional Commits](https://www.conventionalcommits.org/) style**:  
    Use a prefix like `fix`, `feat`, `chore`, or `docs`, followed by the scope (e.g. `extractMetadata`, `readme`) and add a brief description.
@@ -96,6 +97,43 @@ Small fixes (typos, minor code tweaks) can skip this step.
 3. **Push** your branch and open a pull request on GitHub.
 
 4. Include **screenshots or schema output** in your pull request if your changes affect the schema structure or visualization (e.g., new schema fields or diagram updates).
+
+## Sign-off (DCO)
+
+This project enforces the [Developer Certificate of Origin (DCO)](https://developercertificate.org/).  
+All commits must be signed off to confirm you have the right to submit the code.
+
+**How to sign off a commit?**
+
+When making commits, use the `-s` flag:
+
+```bash
+git commit -s -m "feat: add new schema flag"
+```
+
+This automatically adds a `Signed-off-by: Your Name <email>` line to the commit message.
+
+**How to fix a missing sign-off?**
+
+If you forgot to sign off, you can amend the most recent commit:
+
+```bash
+git commit --amend -s --no-edit
+git push --force-with-lease
+```
+
+For multiple commits in a branch, you can rebase with:
+
+```bash
+git rebase -i origin/main --exec "git commit --amend -s --no-edit"
+git push --force-with-lease
+```
+
+**Email Tip**
+
+If you use GitHub’s “Keep my email address private” setting, make sure your sign-off email matches your `username@users.noreply.github.com` address.
+
+Pull requests cannot be merged until all commits include a valid sign-off.
 
 ## Testing your Changes
 
@@ -116,7 +154,7 @@ npx jest tests/components.test.jsx
 ```
 
 Note  
-🗒 This command assumes you are at the root directory.
+:memo: This command assumes you are at the root directory.
 
 ---
 
@@ -159,7 +197,7 @@ Note
 
 Automated tests catch most issues, but you can also test the CLI manually.
 
-🔦 **Try parsing a single component**
+:flashlight: **Try parsing a single component**
 
 1. Follow the [How To Get Started](#how-to-get-started) instructions.
 
@@ -213,12 +251,12 @@ Automated tests catch most issues, but you can also test the CLI manually.
    ```
 
    Note  
-   🗒 The `playground/` directory will be ignored.  
-   🗒 Changes made to the `playground/` directory will not be committed.
+   :memo: The `playground/` directory will be ignored.  
+   :memo: Changes made to the `playground/` directory will not be committed.
 
 ---
 
-🗃️ **Try parsing a repository**
+:file_folder: **Try parsing a repository**
 
 1. Follow the [How To Get Started](#how-to-get-started) instructions.
 
@@ -229,9 +267,9 @@ Automated tests catch most issues, but you can also test the CLI manually.
    ```
 
    Note  
-   🗒 The symbolic link makes `react-diagram-schema` globally accessible.  
-   🗒 To view npm links, run `npm ls -g --depth=0 --link=true`.  
-   🗒 After testing, you can remove the link by running `npm unlink -g react-diagram-schema`.
+   :memo: The symbolic link makes `react-diagram-schema` globally accessible.  
+   :memo: To view npm links, run `npm ls -g --depth=0 --link=true`.  
+   :memo: After testing, you can remove the link by running `npm unlink -g react-diagram-schema`.
 
 3. Leave `react-diagram-schema`'s root directory (in other words, go one level up):
 
@@ -252,12 +290,12 @@ Automated tests catch most issues, but you can also test the CLI manually.
    ```
 
    Note  
-   🗒 Adjust the arguments as needed (the first for the entry directory/file, and optionally the second for the root component name).
+   :memo: Adjust the arguments as needed (the first for the entry directory/file, and optionally the second for the root component name).
 
 6. Open and inspect the generated `schema.json` file from your current working directory.
 
    Note  
-   🗒 The parser writes `schema.json` to the current working directory (where you ran the command).
+   :memo: The parser writes `schema.json` to the current working directory (where you ran the command).
 
    Check for:
    - The number of components detected.
@@ -265,7 +303,7 @@ Automated tests catch most issues, but you can also test the CLI manually.
    - Warnings or errors in the console
 
    Note  
-   🗒 If performance issues occur, feel free to open an issue to discuss improvements.
+   :memo: If performance issues occur, feel free to open an issue to discuss improvements.
 
 7. (Recommended) Visualize the schema with [`react-diagram-visualizer`](https://github.com/AmiraBasyouni/react-diagram-visualizer) to see how the component tree renders.
 
@@ -298,7 +336,7 @@ You can visualize `schema.json` using [react-diagram-visualizer](https://github.
    ```
 
    Note  
-   🗒 Adjust the first argument to match your `schema.json` file's location.
+   :memo: Adjust the first argument to match your `schema.json` file's location.
 
 4. Run the visualizer:
 
@@ -311,7 +349,7 @@ You can visualize `schema.json` using [react-diagram-visualizer](https://github.
    ![React Flow diagram showing Header component node](assets/contributing-md-diagram-preview.png)
 
    Note  
-   🗒 If any modifications are made to the `schema.json` file: close the diagram, stop the visualizer with `Ctrl+c`, then run `npm run dev` again to see the updates in the diagram.
+   :memo: If any modifications are made to the `schema.json` file: close the diagram, stop the visualizer with `Ctrl+c`, then run `npm run dev` again to see the updates in the diagram.
 
 ## New to Open Source?
 

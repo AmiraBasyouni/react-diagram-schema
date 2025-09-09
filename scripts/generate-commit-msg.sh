@@ -44,7 +44,7 @@ echo "$COMMIT_MSG"
 # Prompt for confirmation
 read -p "Use this message? [y/N]: " CONFIRM
 if [ "$CONFIRM" = "y" ]; then
-  git commit -m "$COMMIT_MSG"
+  git commit -s -m "$COMMIT_MSG"
   echo "Commit successful!"
 else
   echo "Commit aborted."

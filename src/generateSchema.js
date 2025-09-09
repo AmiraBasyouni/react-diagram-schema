@@ -18,7 +18,7 @@ function generateSchemaFile(
 
   function writeFile() {
     fs.writeFileSync(outputPath, JSON.stringify(schema, null, 2));
-    console.log(`💾 Schema written to: ${outputPath}`);
+    console.log(`💾 Saved (success): Schema written to ${outputPath}`);
   }
 
   /* if a schema.json file already exists, */
@@ -29,7 +29,7 @@ function generateSchemaFile(
     });
     /* prompt the user if they'd like to overwrite it */
     rl.question(
-      `⚠️  A "schema.json" already exists in your current directory. Overwrite? (y/N): `,
+      `⚠️ Warning: A "schema.json" already exists in your current directory. Overwrite? (y/N): `,
       (answer) => {
         if (answer.toLowerCase() === "y" || answer.toLowerCase() === "yes") {
           writeFile();

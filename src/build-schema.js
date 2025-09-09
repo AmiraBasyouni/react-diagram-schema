@@ -209,7 +209,7 @@ if ((isVerbose || isDebug) && !isQuiet) {
 }
 
 log(
-  `✅ Parsed ${Object.keys(components).length} components from ${filesVisited.size} files in ${durationInMs} milliseconds`,
+  `✅ Success: Parsed ${Object.keys(components).length} components from ${filesVisited.size} files in ${durationInMs} milliseconds`,
   VERBOSITY.normal,
 );
 
