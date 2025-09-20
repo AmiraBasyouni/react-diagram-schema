@@ -5,8 +5,8 @@ const readline = require("readline");
 
 function generateSchemaFile(
   schema,
+  options = {},
   outputFileName = "schema.json",
-  //outputDirName = "./",
 ) {
   //const outputDir = path.join(process.cwd(), outputDirName);
   const outputDir = process.cwd();
@@ -18,7 +18,11 @@ function generateSchemaFile(
 
   function writeFile() {
     fs.writeFileSync(outputPath, JSON.stringify(schema, null, 2));
-    console.log(`💾 Saved (success): Schema written to ${outputPath}`);
+    if (!options.quiet) {
+      console.log(`💾 Saved: Schema has been written to ${outputPath}`);
+    } else {
+      console.log("✅ Success.");
+    }
   }
 
   /* if a schema.json file already exists, */
