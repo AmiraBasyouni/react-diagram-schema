@@ -22,8 +22,7 @@
     "assets/contributing-md-diagram-preview.png",
     "src",
     "package.json",
-    "package-lock.json",
-    "src/cli.js"
+    "package-lock.json"
   ],
   "repository": {
     "type": "git",
