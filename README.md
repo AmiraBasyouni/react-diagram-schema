@@ -46,7 +46,7 @@ npm install
 **To Install Globally:**
 
 ```bash
-npm install -g AmiraBasyouni/react-diagram-schema
+npm install -g react-diagram-schema
 ```
 
 ## Arguments
@@ -72,13 +72,13 @@ The CLI tool accepts two positional arguments:
 run on your React source code directly with `npx`:
 
 ```bash
-npx AmiraBasyouni/react-diagram-schema <entryDirectory|entryFile> [rootComponentName]
+npx react-diagram-schema <entryDirectory|entryFile> [rootComponentName]
 ```
 
 Example:
 
 ```bash
-npx AmiraBasyouni/react-diagram-schema ./src/components/App/ App
+npx react-diagram-schema ./src/components/App/ App
 ```
 
 ---

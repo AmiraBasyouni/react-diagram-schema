@@ -1,8 +1,8 @@
 {
   "name": "react-diagram-schema",
-  "version": "0.1.1",
+  "version": "0.3.1",
   "description": "Takes React components as input and returns a schema as output.",
-  "main": "build-schema.js",
+  "main": "./src/build-schema.js",
   "scripts": {
     "test": "npx jest ./tests/",
     "commit": "./scripts/generate-commit-msg.sh",
@@ -10,8 +10,21 @@
     "format": "npx prettier . --write"
   },
   "bin": {
-    "build-schema": "./src/build-schema.js"
+    "react-diagram-schema": "./src/cli.js",
+    "build-schema": "./src/cli.js"
   },
+  "files": [
+    "README.md",
+    "LICENSE.md",
+    "ROADMAP.md",
+    "CONTRIBUTING.md",
+    "assets/readme-md-diagram-preview.png",
+    "assets/contributing-md-diagram-preview.png",
+    "src",
+    "package.json",
+    "package-lock.json",
+    "scripts/cli.js"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/AmiraBasyouni/react-diagram-schema.git"
