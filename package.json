@@ -1,6 +1,6 @@
 {
   "name": "react-diagram-schema",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Takes React components as input and returns a schema as output.",
   "main": "./src/build-schema.js",
   "scripts": {
@@ -23,7 +23,7 @@
     "src",
     "package.json",
     "package-lock.json",
-    "scripts/cli.js"
+    "src/cli.js"
   ],
   "repository": {
     "type": "git",

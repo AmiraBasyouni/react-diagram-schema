@@ -1,4 +1,3 @@
-//#!/usr/bin/env node
 /* (build-schema.js) Traverses all files starting from entry point to build full schema structure */
 
 /* imports */
