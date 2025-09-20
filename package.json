@@ -23,7 +23,7 @@
     "src",
     "package.json",
     "package-lock.json",
-    "scripts/cli.js"
+    "src/cli.js"
   ],
   "repository": {
     "type": "git",
