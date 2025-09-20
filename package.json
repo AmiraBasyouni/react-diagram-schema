@@ -1,6 +1,6 @@
 {
   "name": "react-diagram-schema",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Takes React components as input and returns a schema as output.",
   "main": "./src/build-schema.js",
   "scripts": {
@@ -10,6 +10,7 @@
     "format": "npx prettier . --write"
   },
   "bin": {
+    "react-diagram-schema": "./src/cli.js",
     "build-schema": "./src/cli.js"
   },
   "files": [
