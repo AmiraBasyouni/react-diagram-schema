@@ -1,13 +1,17 @@
 {
   "name": "react-diagram-schema",
   "version": "0.3.2",
-  "description": "Takes React components as input and returns a schema as output.",
+  "description": "Parses React components from a file entry point and generates/writes a complete schema to a file",
   "main": "./src/build-schema.js",
   "scripts": {
     "test": "npx jest ./tests/",
-    "commit": "./scripts/generate-commit-msg.sh",
     "lint": "npx eslint . --fix",
-    "format": "npx prettier . --write"
+    "format": "npx prettier . --write",
+    "commit": "./scripts/generate-commit-msg.sh"
+  },
+  "exports": {
+    ".": "./src/build-schema.js",
+    "./cli-core": "./src/cli-core.js"
   },
   "bin": {
     "react-diagram-schema": "./src/cli.js",

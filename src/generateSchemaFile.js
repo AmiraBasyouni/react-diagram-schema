@@ -5,28 +5,35 @@ const readline = require("readline");
 
 function generateSchemaFile(
   schema,
-  options = {},
-  outputFileName = "schema.json",
+  flags = {},
+  defaultOutFileName = "schema.json",
 ) {
   //const outputDir = path.join(process.cwd(), outputDirName);
-  const outputDir = process.cwd();
+  //const outputDir = process.cwd();
   //if (!fs.existsSync(outputDir)) {
   //  fs.mkdirSync(outputDir, { recursive: true });
   //}
 
-  const outputPath = path.join(outputDir, outputFileName);
+  //const outputPath = path.join(
+  //  process.cwd(),
+  //  options.outputFile ? options.outputFile : outputFileName,
+  //);
+  const outPath = path.resolve(
+    process.cwd(),
+    flags.outFile ? flags.outFile : defaultOutFileName,
+  );
 
   function writeFile() {
-    fs.writeFileSync(outputPath, JSON.stringify(schema, null, 2));
-    if (!options.quiet) {
-      console.log(`💾 Saved: Schema has been written to ${outputPath}`);
+    fs.writeFileSync(outPath, JSON.stringify(schema, null, 2));
+    if (!flags.quiet) {
+      console.log(`💾 Saved: Schema has been written to ${outPath}`);
     } else {
       console.log("✅ Success.");
     }
   }
 
   /* if a schema.json file already exists, */
-  if (fs.existsSync(outputPath)) {
+  if (fs.existsSync(outPath)) {
     const rl = readline.createInterface({
       input: process.stdin,
       output: process.stdout,
