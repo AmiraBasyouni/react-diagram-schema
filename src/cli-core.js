@@ -1,8 +1,6 @@
 /* (cli-core.js) This File Contains Command Line Logic */
 
 // imports
-const fs = require("fs");
-const isFile = require("./utils/isFile");
 const buildSchema = require("./build-schema");
 const generateSchemaFile = require("./generateSchemaFile");
 
@@ -33,6 +31,7 @@ function parseFlags(argv) {
       i++; // skip the next arg since it's the filename
     } else rest.push(a); // if not a flag, append to this array
   }
+
   // overwrite verbosity levels based on the precedence: quiet > debug > verbose
   if (flags.quiet) {
     flags.verbose = false;
@@ -48,36 +47,12 @@ function parseFlags(argv) {
 // runCli
 // 1. recieves the command line user input process.argv.slice(2)
 // 2. parses input using parseFlags() to recieve verbosity levels + the rest of the input
-// 3. validates the input
-// 4. creates a schema using buildSchema()
-// 5. writes the schema to a file
-// 6. returns the file's location for optional further analysis
+// 3. creates a schema using buildSchema()
+// 4. writes the schema to a file
+// 5. returns the file's location for optional further analysis
 function runCli(args) {
   const { flags, rest } = parseFlags(args);
   const [entryDirectory, rootComponentName] = rest;
-
-  // Input Validation: detect invalid user input <entryDirectory|entryFile>
-  if (
-    typeof entryDirectory != "string" ||
-    (!isFile(entryDirectory) && !fs.existsSync(entryDirectory))
-  ) {
-    throw new Error(
-      `(build-schema) invalid path "${entryDirectory}", please provide a valid directory or file path as your first a  rgument (e.g. "./src")`,
-    );
-  }
-
-  // Input Validation: detect invalid user input [rootComponentName]
-  if (
-    typeof entryComponentName === "string" &&
-    !/^--/.test(rootComponentName) &&
-    !/^[A-Z]/.test(rootComponentName)
-  ) {
-    // (when no component name is provided, assume a default export is available)
-    // guard against invalid component names (if component name is provided)
-    throw new Error(
-      `(build-schema) invalid component name "${rootComponentName}", please provide a valid component name as your s  econd argument (e.g. "App")`,
-    );
-  }
 
   // create a schema based on the user's project structure
   const schema = buildSchema(entryDirectory, rootComponentName, flags);

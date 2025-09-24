@@ -7,6 +7,7 @@ const resolveFilePath = require("./resolveFilePath");
 const readSourceFile = require("./readSourceFile");
 const parseImport = require("./parseImport");
 const resolveComponent = require("./resolveComponent");
+const fs = require("fs");
 const isFile = require("./utils/isFile");
 const getDirectoryFromFilePath = require("./utils/getDirectoryFromFilePath");
 const getRelativeFromAbsolutePath = require("./utils/getRelativeFromAbsolutePath");
@@ -23,6 +24,29 @@ function build_schema(entryDirectory, rootComponentName, options = {}) {
   // function for logging messages:
   function log(message, type = "log") {
     if (console[type]) console[type](message);
+  }
+
+  // Input Validation: detect invalid <entryDirectory|entryFile>
+  if (
+    typeof entryDirectory != "string" ||
+    (!isFile(entryDirectory) && !fs.existsSync(entryDirectory))
+  ) {
+    throw new Error(
+      `(build-schema) invalid path "${entryDirectory}", please provide a valid directory or file path as your first a  rgument (e.g. "./src")`,
+    );
+  }
+
+  // Input Validation: detect invalid [rootComponentName]
+  if (
+    typeof entryComponentName === "string" &&
+    !/^--/.test(rootComponentName) &&
+    !/^[A-Z]/.test(rootComponentName)
+  ) {
+    // (when no component name is provided, assume a default export is available)
+    // guard against invalid component names (if component name is provided)
+    throw new Error(
+      `(build-schema) invalid component name "${rootComponentName}", please provide a valid component name as your s  econd argument (e.g. "App")`,
+    );
   }
 
   // initialize stack
