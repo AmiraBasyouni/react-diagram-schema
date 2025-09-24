@@ -15,7 +15,7 @@ function parseFlags(argv) {
     quiet: false,
     verbose: false,
     debug: false,
-    outFile: "schema.json",
+    outFile: "./schema.json",
   };
   // the rest of the user input (i.e. <entryDirectory> [rootComponentName]) without the flags
   const rest = [];
