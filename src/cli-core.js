@@ -57,11 +57,9 @@ function runCli(args) {
   // create a schema based on the user's project structure
   const schema = buildSchema(entryDirectory, rootComponentName, flags);
 
-  // write the schema to a file
-  generateSchemaFile(schema, flags);
-
-  // return the file's location for optional further analysis
-  return flags.outFile;
+  // write the schema to a file,
+  // and return the file's location for optional further analysis
+  return generateSchemaFile(schema, flags);
 }
 
 module.exports = runCli;
