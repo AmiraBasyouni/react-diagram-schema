@@ -267,6 +267,15 @@ Usage: append `--debug` to the end of your command like so:
 build-schema ./components/App App --debug
 ```
 
+**Output File**
+Purpose: specify the filename/path where the schema should be saved.  
+Note: By default, a `schema.json` file will be saved in your current working directory
+Usage: append `--out` or `--output` to the end of your command like so:
+
+```bash
+build-schema ./src App --out ./dist/my-schema.json
+```
+
 ## Troubleshooting
 
 :heavy_exclamation_mark: **Empty Schema**
