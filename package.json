@@ -1,6 +1,6 @@
 {
   "name": "react-diagram-schema",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "Parses React components from a file entry point and generates/writes a complete schema to a file",
   "main": "./src/build-schema.js",
   "scripts": {
