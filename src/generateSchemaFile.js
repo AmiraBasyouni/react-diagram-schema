@@ -16,10 +16,10 @@ function generateSchemaFile(
   // if user did not provide an output file path
   if (!flags.outFile) {
     // default to ./schema.json
-    outFile = path.resolve(process.cwd(), defaultOutFileName);
+    outFile = path.resolve(process.env.INIT_CWD, defaultOutFileName);
   } else {
     // otherwise, normalize their input into an absolute path
-    const outPath = path.resolve(process.cwd(), flags.outFile);
+    const outPath = path.resolve(process.env.INIT_CWD, flags.outFile);
 
     // if user input is a directory, append default output file name (schema.json)
     if (outPath.endsWith(path.sep) || path.extname(outPath) === "") {

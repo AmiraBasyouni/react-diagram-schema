@@ -1,6 +1,7 @@
 /* (cli-core.js) This File Contains Command Line Logic */
 
 // imports
+const path = require("path");
 const buildSchema = require("./build-schema");
 const generateSchemaFile = require("./generateSchemaFile");
 
@@ -50,9 +51,12 @@ function parseFlags(argv) {
 // 3. creates a schema using buildSchema()
 // 4. writes the schema to a file
 // 5. returns the file's location for optional further analysis
-function runCli(args) {
+function runCli(args, cwd = process.cwd()) {
   const { flags, rest } = parseFlags(args);
-  const [entryDirectory, rootComponentName] = rest;
+  const [entryDirectoryArg, rootComponentName] = rest;
+
+  // Resolve relative to the *actual* cwd
+  const entryDirectory = path.resolve(cwd, entryDirectoryArg);
 
   // create a schema based on the user's project structure
   const schema = buildSchema(entryDirectory, rootComponentName, flags);
