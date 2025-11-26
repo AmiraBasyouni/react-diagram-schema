@@ -41,7 +41,7 @@ function build_schema(entryDirectory, rootComponentName, verbosity = {}) {
     (!isFile(entryDirectory) && !fs.existsSync(entryDirectory))
   ) {
     throw new Error(
-      `(build-schema) invalid path "${entryDirectory}", please provide a valid directory or file path as your first a  rgument (e.g. "./src")`,
+      `(build-schema) invalid path "${entryDirectory}", please provide a valid directory or file path as your first argument (e.g. "./src")`,
     );
   }
 
@@ -54,7 +54,7 @@ function build_schema(entryDirectory, rootComponentName, verbosity = {}) {
     // (when no component name is provided, assume a default export is available)
     // guard against invalid component names (if component name is provided)
     throw new Error(
-      `(build-schema) invalid component name "${rootComponentName}", please provide a valid component name as your s  econd argument (e.g. "App")`,
+      `(build-schema) invalid component name "${rootComponentName}", please provide a valid component name as your second argument (e.g. "App")`,
     );
   }
 

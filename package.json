@@ -1,7 +1,7 @@
 {
   "name": "react-diagram-schema",
-  "version": "0.3.3",
-  "description": "Parses React components from a file entry point and generates/writes a complete schema to a file",
+  "version": "0.3.4",
+  "description": "CLI tool that parses React components and generates a structured JSON schema capturing component hierarchy, state, props, and context",
   "main": "./src/build-schema.js",
   "scripts": {
     "test": "npx jest ./tests/",
@@ -25,8 +25,7 @@
     "assets/readme-md-diagram-preview.png",
     "assets/contributing-md-diagram-preview.png",
     "src",
-    "package.json",
-    "package-lock.json"
+    "package.json"
   ],
   "repository": {
     "type": "git",
