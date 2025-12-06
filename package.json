@@ -14,8 +14,8 @@
     "./cli-core": "./src/cli-core.js"
   },
   "bin": {
-    "react-diagram-schema": "./src/cli.js",
-    "build-schema": "./src/cli.js"
+    "react-diagram-schema": "src/cli.js",
+    "build-schema": "src/cli.js"
   },
   "files": [
     "README.md",
