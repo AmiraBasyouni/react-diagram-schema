@@ -67,7 +67,7 @@ function resolveImport(fromFile, importedName) {
       /* eslint-disable no-unused-vars */
     } catch (err) {
       /* eslint-enable no-unused-vars */
-      // If the module cannot be found using the resolution algorithm, require.resolve() will throw an error, just like require() woul
+      // If the module cannot be found using the resolution algorithm, require.resolve() will throw an error, just like require() would
       //console.log(
       //  `[resolveImport] Node could NOT resolve "${importedName}" from "${fromFile}". Trying manual fallback...`,
       //);
@@ -98,13 +98,11 @@ function resolveImport(fromFile, importedName) {
       }
     }
 
-    console.log(
-      `[resolveImport] FAILED to resolve "${importedName}" from "${fromFile}".`,
-    );
+    console.log(`[resolveImport] FAILED to resolve "${importedName}".`);
     return null;
   } catch (fatalErr) {
     console.error(
-      `[resolveImport] Fatal error while resolving "${importedName}" from "${fromFile}":`,
+      `[resolveImport] Fatal error while resolving "${importedName}":`,
       fatalErr,
     );
     return null;
