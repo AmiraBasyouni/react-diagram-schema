@@ -6,12 +6,12 @@ const fs = require("fs");
 const componentIsDeclaredInCode = require("./utils/componentIsDeclaredInCode");
 const isFile = require("./utils/isFile");
 
-function resolveFilePath(directory, importPath, componentName) {
+function resolveFilePath(entryPoint, importPath, componentName) {
   /* store user's current working directory */
   const projectRootDir = process.cwd();
 
   /* normalize the import path */
-  const absolutePath = path.resolve(directory, importPath);
+  const absolutePath = path.resolve(entryPoint, importPath);
 
   /* if import path lead directly to a valid file path, */
   if (isFile(absolutePath)) {

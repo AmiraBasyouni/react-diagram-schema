@@ -29,7 +29,7 @@ const stack = [];
 // 2. validates inputs <entryDirectory|entryFile> and [rootComponentName]
 // 3. push the inputs to the stack
 // 4. traverse user's project files using DFS
-function build_schema(entryDirectory, rootComponentName, verbosity = {}) {
+function build_schema(entryPoint, rootComponentName, verbosity = {}) {
   // function for logging messages:
   function log(message, type = "log") {
     if (console[type]) console[type](message);
@@ -37,11 +37,11 @@ function build_schema(entryDirectory, rootComponentName, verbosity = {}) {
 
   // Input Validation: detect invalid <entryDirectory|entryFile>
   if (
-    typeof entryDirectory != "string" ||
-    (!isFile(entryDirectory) && !fs.existsSync(entryDirectory))
+    typeof entryPoint != "string" ||
+    (!isFile(entryPoint) && !fs.existsSync(entryPoint))
   ) {
     throw new Error(
-      `(build-schema) invalid path "${entryDirectory}", please provide a valid directory or file path as your first argument (e.g. "./src")`,
+      `(build-schema) invalid path "${entryPoint}", please provide a valid directory or file path as your first argument (e.g. "./src")`,
     );
   }
 
@@ -58,11 +58,9 @@ function build_schema(entryDirectory, rootComponentName, verbosity = {}) {
     );
   }
 
-  // push the entryDirectory and rootComponentName to the stack
+  // push the entryPoint and rootComponentName to the stack
   stack.push({
-    directory: isFile(entryDirectory)
-      ? getDirectoryFromFilePath(entryDirectory)
-      : entryDirectory,
+    entryPoint,
     importPath: "./",
     componentName:
       rootComponentName && rootComponentName.startsWith("--")
@@ -75,15 +73,21 @@ function build_schema(entryDirectory, rootComponentName, verbosity = {}) {
 
   // Start Traversing user's React files using DFS
   while (stack.length > 0) {
-    const { directory, importPath = "./", componentName = "" } = stack.pop();
+    const { entryPoint, importPath = "./", componentName = "" } = stack.pop();
+
+    // retrieve entry Directory
+    const directory = isFile(entryPoint)
+      ? getDirectoryFromFilePath(entryPoint)
+      : entryPoint;
+
     if (verbosity.verbose) {
       log(`Parsing ${componentName}...`);
       log(
-        `(build-schema) retrieved directory "${directory}", import path "${importPath}", and component name ${componentName}`,
+        `(build-schema) retrieved entry point "${entryPoint}", import path "${importPath}", and component name ${componentName}`,
       );
     }
     const relativeFilePath = resolveFilePath(
-      directory,
+      entryPoint,
       importPath,
       componentName,
     );
@@ -173,7 +177,7 @@ function build_schema(entryDirectory, rootComponentName, verbosity = {}) {
               );
             }
             stack.push({
-              directory: resolvedImport_RelativeFilePath,
+              entryPoint: resolvedImport_RelativeFilePath,
               importPath: "./",
               componentName: unresolvedDescendant,
             });
