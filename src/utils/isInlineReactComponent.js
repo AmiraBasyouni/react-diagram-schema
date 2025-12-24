@@ -10,6 +10,10 @@ function isInlineReactComponent(program_bodyPath) {
     // by separating the conditions with an if statement,
     // we ensure that the "type" property is checked only when the previous condition is true
     const inlineDeclaration = path.get("declarations")[0];
+    if (!inlineDeclaration?.node.init) {
+      // in the case of an uninitialized variable (i.e. var name;) early exit
+      return false;
+    }
 
     return (
       (inlineDeclaration?.node.init.type === "ArrowFunctionExpression" ||
