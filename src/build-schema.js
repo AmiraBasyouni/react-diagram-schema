@@ -7,9 +7,8 @@ const resolveFilePath = require("./resolveFilePath");
 const readSourceFile = require("./readSourceFile");
 const parseImport = require("./parseImport");
 const resolveComponent = require("./resolveComponent");
-const fs = require("fs");
-const isFile = require("./utils/isFile");
-const getDirectoryFromFilePath = require("./utils/getDirectoryFromFilePath");
+const { isFile, isDirectory, pathExists } = require("./utils/isFile");
+const componentIsDeclaredInCode = require("./utils/componentIsDeclaredInCode");
 const getRelativeFromAbsolutePath = require("./utils/getRelativeFromAbsolutePath");
 const getAlias = require("./utils/getAlias");
 
@@ -36,12 +35,20 @@ function build_schema(entryPoint, rootComponentName, verbosity = {}) {
   }
 
   // Input Validation: detect invalid <entryDirectory|entryFile>
-  if (
-    typeof entryPoint != "string" ||
-    (!isFile(entryPoint) && !fs.existsSync(entryPoint))
-  ) {
+  if (typeof entryPoint != "string") {
     throw new Error(
-      `(build-schema) invalid path "${entryPoint}", please provide a valid directory or file path as your first argument (e.g. "./src")`,
+      `(build-schema) invalid argument, the path "${entryPoint}" is not a string.
+      Please provide a valid directory or file path as your first argument (e.g. "./src")`,
+    );
+  } else if (!pathExists(entryPoint)) {
+    throw new Error(
+      `(build-schema) invalid argument, the path "${entryPoint}" does not exist.
+      Please provide an existing directory or file as your first argument (e.g. "./src")`,
+    );
+  } else if (!isFile(entryPoint) && !isDirectory(entryPoint)) {
+    throw new Error(
+      `(build-schema) invalid argument, the path "${entryPoint}" is not a directory nor a file.
+      Please provide a valid directory or file path as your first argument (e.g. "./src")`,
     );
   }
 
@@ -61,7 +68,6 @@ function build_schema(entryPoint, rootComponentName, verbosity = {}) {
   // push the entryPoint and rootComponentName to the stack
   stack.push({
     entryPoint,
-    importPath: "./",
     componentName:
       rootComponentName && rootComponentName.startsWith("--")
         ? ""
@@ -73,55 +79,55 @@ function build_schema(entryPoint, rootComponentName, verbosity = {}) {
 
   // Start Traversing user's React files using DFS
   while (stack.length > 0) {
-    const { entryPoint, importPath = "./", componentName = "" } = stack.pop();
+    const { entryPoint, componentName = "" } = stack.pop();
 
-    // retrieve entry Directory
-    const directory = isFile(entryPoint)
-      ? getDirectoryFromFilePath(entryPoint)
-      : entryPoint;
-
-    if (verbosity.verbose) {
-      log(`Parsing ${componentName}...`);
-      log(
-        `(build-schema) retrieved entry point "${entryPoint}", import path "${importPath}", and component name ${componentName}`,
-      );
-    }
-    const relativeFilePath = resolveFilePath(
-      entryPoint,
-      importPath,
-      componentName,
-    );
+    // rely on this relative file path to hide the user's private file structure
+    const relativeFilePath = resolveFilePath(entryPoint, componentName);
     // Guard Clause: on resolveFilePath() failure, log a warning and skip the current file
     if (!relativeFilePath) {
       if (verbosity.verbose) {
         log(
-          `(build-schema) could not resolve the file path from directory "${directory}" with the import path "${importPath}" for component "${componentName}"`,
+          `(build-schema) could not resolve the path "${entryPoint}" for the component "${componentName}"`,
           "warn",
         );
       }
       continue;
     }
-    // Guard Clause: if this file is marked as visited, skip it (e.g. in the case of two components importing one another)
+
+    // if this file is marked as visited, skip it (avoids repeated parsings and infinit loop)
+    // (e.g. in the case of two different files importing one another)
     if (filesVisited.has(relativeFilePath)) {
       continue;
     }
-    // mark this file as visited
+    // otherwise, mark this file as visited
     filesVisited.set(relativeFilePath, true);
 
-    // INITIALIZING VARIABLES
-    // code: stores the file's code as a string
-    // schema: stores the generated schema of this file
+    // retrieve the file's code as a string
     const code = readSourceFile(relativeFilePath);
+
+    // GENERATE SCHEMA
+    // retrieve the generated schema of this file
     const schema = parseCode(code, relativeFilePath);
     // Guard Clause: on parseCode() failure, log a warning and skip the current file
     if (!schema) {
       if (verbosity.verbose) {
         log(
-          `(build-schema) failed to parse component "${componentName}" stored in the file "${relativeFilePath}"`,
+          `(build-schema) failed to parse component "${componentName}" in the file "${relativeFilePath}"`,
           "warn",
         );
       }
       continue;
+    }
+
+    // if the component's declaration cannot be found, log a warning
+    const isEntryComponent = true;
+    if (!componentIsDeclaredInCode(code, componentName, isEntryComponent)) {
+      if (verbosity.verbose) {
+        log(
+          `(build-schema) could not find the component ${componentName} at the path ${relativeFilePath}`,
+          "warn",
+        );
+      }
     }
 
     // account for when multiple components are defined in the same file
@@ -139,6 +145,7 @@ function build_schema(entryPoint, rootComponentName, verbosity = {}) {
         components[`${component.name}::${relativeFilePath}`] = component;
       }
     });
+
     // UNRESOLVED DESCENDANTS
     // for each of the component's descendants whose declaration could not be found,
     Object.values(schema).forEach((component) => {
@@ -178,7 +185,6 @@ function build_schema(entryPoint, rootComponentName, verbosity = {}) {
             }
             stack.push({
               entryPoint: resolvedImport_RelativeFilePath,
-              importPath: "./",
               componentName: unresolvedDescendant,
             });
           }
