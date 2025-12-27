@@ -4,6 +4,7 @@ const fs = require("fs");
 const path = require("path");
 const { createRequire } = require("module");
 const isFile = require("./utils/isFile");
+const resolveTypeScriptPath = require("./resolveTypeScriptPath");
 
 //
 // Resolves a component import to an absolute file path.
@@ -21,6 +22,7 @@ function resolveImport(fromFile, importedName) {
   }
 
   try {
+    // setup
     const requireFromFile = createRequire(fromFile);
 
     // 1. try Node's normal resolution
@@ -29,7 +31,7 @@ function resolveImport(fromFile, importedName) {
       const resolved = requireFromFile.resolve(importedName);
       //console.log(`[resolveImport] Node resolved "${importedName}" from "${fromFile}" -> ${resolved}`);
 
-      // 2. Look for a package.json for this module
+      // 1. a) Look for a package.json for this module
       let pkgJsonPath;
       try {
         pkgJsonPath = require.resolve(`${importedName}/package.json`, {
@@ -44,12 +46,12 @@ function resolveImport(fromFile, importedName) {
 
       const pkgDir = path.dirname(pkgJsonPath);
 
-      // 3. Check if this package looks like a workspace package
+      // 1. b) Check if this package looks like a workspace package
       // (heyristic: does it have a "src/" folder?)
       const srcDir = path.join(pkgDir, "src");
 
       if (fs.existsSync(srcDir)) {
-        // 4. Prefer src/index.* over dist/umd/*
+        // 1. c) Prefer src/index.* over dist/umd/*
         const candidates = [
           "index.ts",
           "index.tsx",
@@ -69,11 +71,19 @@ function resolveImport(fromFile, importedName) {
       /* eslint-enable no-unused-vars */
       // If the module cannot be found using the resolution algorithm, require.resolve() will throw an error, just like require() would
       //console.log(
-      //  `[resolveImport] Node could NOT resolve "${importedName}" from "${fromFile}". Trying manual fallback...`,
+      //  `[resolveImport] Node could NOT resolve "${importedName}" from "${fromFile}". Trying tsconfig fallback...`,
       //);
     }
 
-    // Manual fallback: check extensions (.js, .jsx, .ts, .tsx)
+    // 2. try typescript's tsconfig resolution
+    try {
+      const resolvedDir = resolveTypeScriptPath(fromFile, importedName);
+      return resolvedDir;
+    } catch (err) {
+      console.log(`[resolveImport] tsconfig resolution error: ${err}`);
+    }
+
+    // 3. Manual fallback: check extensions (.js, .jsx, .ts, .tsx)
     const baseDir = path.dirname(fromFile);
     const candidatePaths = [
       path.resolve(baseDir, importedName),
