@@ -8,7 +8,6 @@ const readSourceFile = require("./readSourceFile");
 const parseImport = require("./parseImport");
 const resolveComponent = require("./resolveComponent");
 const { isFile, isDirectory, pathExists } = require("./utils/isFile");
-const componentIsDeclaredInCode = require("./utils/componentIsDeclaredInCode");
 const getRelativeFromAbsolutePath = require("./utils/getRelativeFromAbsolutePath");
 const getAlias = require("./utils/getAlias");
 
@@ -119,17 +118,6 @@ function build_schema(entryPoint, rootComponentName, verbosity = {}) {
       continue;
     }
 
-    // if the component's declaration cannot be found, log a warning
-    const isEntryComponent = true;
-    if (!componentIsDeclaredInCode(code, componentName, isEntryComponent)) {
-      if (verbosity.verbose) {
-        log(
-          `(build-schema) could not find the component ${componentName} at the path ${relativeFilePath}`,
-          "warn",
-        );
-      }
-    }
-
     // account for when multiple components are defined in the same file
     // create Unique IDs
     Object.values(schema).forEach((component) => {
@@ -147,9 +135,20 @@ function build_schema(entryPoint, rootComponentName, verbosity = {}) {
     });
 
     // UNRESOLVED DESCENDANTS
-    // for each of the component's descendants whose declaration could not be found,
+    // for each of the component's descendants,
     Object.values(schema).forEach((component) => {
       component.unresolvedDescendants.forEach((unresolvedDescendant) => {
+        // check if descendant is declared in the current file
+        const unresolvedDescendantIsInCurrentFile =
+          schema[`${unresolvedDescendant}::${relativeFilePath}`];
+        // if so, set its location to the current file
+        if (unresolvedDescendantIsInCurrentFile) {
+          component["descendants"]?.set(unresolvedDescendant, {
+            location: { filepath: relativeFilePath },
+          });
+          return;
+        }
+        // otherwise,
         // collect the descendant's import statement
         const descendantImportPath = parseImport(code, unresolvedDescendant);
 
