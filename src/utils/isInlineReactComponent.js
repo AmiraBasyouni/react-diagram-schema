@@ -7,29 +7,41 @@ function isInlineReactComponent(program_bodyPath) {
     // by separating the conditions with an if statement,
     // we ensure that the "type" property is checked only when the previous condition is true
 
-    // if this path is not a variable declaration, early return
+    // EARLY RETURN when this path is not a variable declaration
     if (!path.isVariableDeclaration()) {
       return false;
     }
 
     const inlineDeclaration = path.get("declarations")[0];
 
-    // in the case of an uninitialized variable (i.e. var name;) early return
+    // EARLY RETURN when it's an uninitialized variable (i.e. var name;)
     if (!inlineDeclaration?.node.init) {
       return false;
     }
 
-    return (
-      (inlineDeclaration?.node.init.type === "ArrowFunctionExpression" ||
-        inlineDeclaration?.node.init.type === "FunctionExpression" ||
-        (inlineDeclaration?.node.init.type === "CallExpression" &&
-          inlineDeclaration?.node.init.callee.name === "forwardRef" &&
-          (inlineDeclaration?.node.init.arguments[0].type ===
-            "ArrowFunctionExpression" ||
-            inlineDeclaration?.node.init.arguments[0].type ===
-              "FunctionExpression"))) &&
-      /^[A-Z]/.test(inlineDeclaration.node.id.name)
-    );
+    // Case 1) variable holds a function
+    const isFunction =
+      inlineDeclaration?.node.init.type === "ArrowFunctionExpression" ||
+      inlineDeclaration?.node.init.type === "FunctionExpression";
+
+    // Case 2 Part A)  variable holds forwardRef() or React.forwardRef()
+    const isForwardRef = (path) =>
+      path?.node.init.type === "CallExpression" &&
+      (path?.node.init.callee.name === "forwardRef" ||
+        path?.node.init.callee.property?.name === "forwardRef");
+
+    // Case 2 Part B) forwardRef is wrapped around a function, i.e. forwardRef( this is a function );
+    const isFunctionInsideRef = (path) =>
+      path?.node.init.arguments[0].type === "ArrowFunctionExpression" ||
+      path?.node.init.arguments[0].type === "FunctionExpression";
+
+    // Case 2 Part A&B)
+    const isForwardRefReceivingFunction =
+      isForwardRef(inlineDeclaration) && isFunctionInsideRef(inlineDeclaration);
+
+    const isCamelCased = /^[A-Z]/.test(inlineDeclaration.node.id.name);
+
+    return (isFunction || isForwardRefReceivingFunction) && isCamelCased;
   };
   return isInlineReactComponent(program_bodyPath);
 }
