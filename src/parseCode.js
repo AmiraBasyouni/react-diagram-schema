@@ -3,7 +3,7 @@ const parser = require("@babel/parser");
 const traverse = require("@babel/traverse").default;
 const isInlineReactComponent = require("./utils/isInlineReactComponent");
 const isFunctionDefinedReactComponent = require("./utils/isFunctionDefinedReactComponent");
-const extract_exportDeclarationPaths = require("./utils/extract_exportDeclarationPaths");
+//const extract_exportDeclarationPaths = require("./utils/extract_exportDeclarationPaths");
 const extract_exportVariableDeclaratorPaths = require("./utils/extract_exportVariableDeclaratorPaths");
 const extract_exportFunctionDeclarationPaths = require("./utils/extract_exportFunctionDeclarationPaths");
 const extractMetadata = require("./utils/extractMetadata");
@@ -53,12 +53,14 @@ function parseCode(code, filepath) {
       const program_bodyPath = path.get("body");
 
       // ---- support-exported components -----------------------------------------------------------------
-      //EXTRACT export declarations
-      const exportDeclarationPaths =
-        extract_exportDeclarationPaths(program_bodyPath);
+      //EXTRACT exported (default and named) declarations
+      const exportDeclarationPaths = program_bodyPath.filter(
+        (path) =>
+          path.isExportDefaultDeclaration || path.isExportNamedDeclaration,
+      );
       // ---- inline-defined components -----------------------------------------------------------------
 
-      //EXTRACT inline REACT-COMPONENTS
+      //EXTRACT variable declared REACT-COMPONENTS (e.g. const Button = ...)
       const inlineComponentDeclarationPaths = program_bodyPath.filter((p) =>
         isInlineReactComponent(p),
       );
@@ -67,10 +69,11 @@ function parseCode(code, filepath) {
           (declaration) => declaration.get("declarations")[0],
         );
 
-      //EXTRACT inline export declarations
+      //EXTRACT variable declared export declarations (e.g. export const Button = ...)
       const exportVariableDeclaratorPaths =
         extract_exportVariableDeclaratorPaths(exportDeclarationPaths);
 
+      /*
       //EXTRACT provider
       const varDeclarators = program_bodyPath
         .filter((path) => path.isVariableDeclaration())
@@ -91,8 +94,9 @@ function parseCode(code, filepath) {
           (components[`${provider.name}::${provider.location.filepath}`] =
             provider),
       );
+      */
 
-      //MERGE exports WITH normal inline declarations
+      //MERGE variable declared exports WITH variable declared react components
       exportVariableDeclaratorPaths.forEach((exportVariable) =>
         inlineComponentDeclaratorPaths.push(exportVariable),
       );
