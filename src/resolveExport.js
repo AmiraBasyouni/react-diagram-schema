@@ -90,7 +90,9 @@ function resolveExport(symbolName, filePath, visited = new Set()) {
           (spec) => spec.exported.name === symbolName,
         );
         if (direct) {
-          targetPath = resolveExport(symbolName, abs, visited);
+          // try to recurse. If you can't, you've arrived.
+          let recurse = resolveExport(symbolName, abs, visited);
+          targetPath = recurse ? recurse : abs;
           return;
         }
       } else if (node.declaration) {

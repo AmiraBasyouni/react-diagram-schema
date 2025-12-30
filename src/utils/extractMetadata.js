@@ -1,5 +1,4 @@
 // extractMetadata.js
-const componentIsDeclaredInCode = require("./componentIsDeclaredInCode");
 const isFunctionDefinedReactComponent = require("./isFunctionDefinedReactComponent");
 const isInlineReactComponent = require("./isInlineReactComponent");
 
@@ -241,7 +240,8 @@ function extractComponentDescendants(returnStatementPath, filepath, code, obj) {
       } else if (opening.name.type === "JSXMemberExpression") {
         // Handle <Some.Component>
         // Get only the rightmost name (e.g., Some.Component -> "Component")
-        tagName = opening.name.property.name;
+        // NOTE: this step, extracting provider derived components, will be temporarily skipped until bugs are fixed
+        //tagName = opening.name.property.name;
         if (tagName === "Provider") {
           // invalid descendant: ignore Provider, do not add it to the list of descendants
           tagName = undefined;
@@ -250,21 +250,12 @@ function extractComponentDescendants(returnStatementPath, filepath, code, obj) {
 
       // Only add component-like elements (capitalized, not HTML tags)
       if (tagName && /^[A-Z]/.test(tagName)) {
-        const isEntryComponent = false;
-        if (componentIsDeclaredInCode(code, tagName, isEntryComponent)) {
-          /* and record its declaration line */
-          descendantsMap.set(tagName, {
-            location: {
-              //line: descendantLocation?.start.line,
-              filepath,
-            },
-          });
-        } else {
-          obj.unresolvedDescendants.add(tagName);
-          descendantsMap.set(tagName, {
-            location: {},
-          });
-        }
+        // create a temporary list of this component's unresolved descendants
+        // (this list gets resolved in build-schema.js)
+        obj.unresolvedDescendants.add(tagName);
+        descendantsMap.set(tagName, {
+          location: {},
+        });
       }
     },
   }),

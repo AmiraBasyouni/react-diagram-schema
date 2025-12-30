@@ -46,7 +46,7 @@ function parseFlags(argv) {
 }
 
 // runCli
-// 1. recieves the command line user input process.argv.slice(2)
+// 1. recieves the command line user input process.argv.slice(2) and the cwd
 // 2. parses input using parseFlags() to recieve verbosity levels + the rest of the input
 // 3. creates a schema using buildSchema()
 // 4. writes the schema to a file
@@ -63,7 +63,7 @@ function runCli(args, cwd = process.cwd()) {
 
   // write the schema to a file,
   // and return the file's location for optional further analysis
-  return generateSchemaFile(schema, flags);
+  return generateSchemaFile(cwd, schema, flags);
 }
 
 module.exports = runCli;

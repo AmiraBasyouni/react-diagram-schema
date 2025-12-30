@@ -1,12 +1,28 @@
 const fs = require("fs");
 
-function isFile(path) {
+// Check if a directory exists
+function isDirectory(dirPath) {
   try {
-    return fs.statSync(path).isFile();
-  } catch (e) {
-    //console.warn(`Error: (isFile) ${e}`);
-    return false; // path doesn't exist or some other error
+    const stats = fs.statSync(dirPath);
+    return stats.isDirectory();
+  } catch (error) {
+    return false; // Path doesn't exist or no access
   }
 }
 
-module.exports = isFile;
+// Check if a file exists
+function isFile(filePath) {
+  try {
+    const stats = fs.statSync(filePath);
+    return stats.isFile();
+  } catch (error) {
+    return false;
+  }
+}
+
+// Check if path exists (file or directory)
+function pathExists(p) {
+  return fs.existsSync(p);
+}
+
+module.exports = { isDirectory, isFile, pathExists };
