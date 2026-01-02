@@ -15,10 +15,12 @@ const getAlias = require("./utils/getAlias");
 // warnings: an array to collect warnings related to insufficient data
 // components: an object to store the schema
 // filesVisited: a Map to prevent multiple visits to the same file
+// importResolutions: a Map to prevent multiple resolutions for the same import path
 // stack: an array to organize visiting logic
 const warnings = [];
 const components = {};
 const filesVisited = new Map();
+const importResolutions = new Map();
 const stack = [];
 
 // build_schema
@@ -149,23 +151,45 @@ function build_schema(entryPoint, rootComponentName, verbosity = {}) {
           return;
         }
         // otherwise,
-        // collect the descendant's import statement
+        // collect the descendant's import path
         const descendantImportPath = parseImport(code, unresolvedDescendant);
+        // if this import path was not resolved before,
+        if (
+          !importResolutions.has(
+            `${descendantImportPath}::${unresolvedDescendant}`,
+          )
+        ) {
+          if (verbosity.verbose) {
+            log(
+              `(build-schema) planning to visit import path "${descendantImportPath}" to resolve "${unresolvedDescendant}"`,
+            );
+          }
+          // then resolve it as an absolute file path
+          const resolvedImport_AbsoluteFilePath = resolveComponent(
+            unresolvedDescendant,
+            path.resolve(process.cwd(), relativeFilePath),
+            descendantImportPath,
+          );
 
-        // resolve descendant's import to an absolute file path
-        const resolvedImport_AbsoluteFilePath = resolveComponent(
-          unresolvedDescendant,
-          path.resolve(process.cwd(), relativeFilePath),
-          descendantImportPath,
-        );
+          // record resolution path
+          importResolutions.set(
+            `${descendantImportPath}::${unresolvedDescendant}`,
+            resolvedImport_AbsoluteFilePath,
+          );
+        }
 
         // transform absolute file path to a relative file path
         const resolvedImport_RelativeFilePath = getRelativeFromAbsolutePath(
-          resolvedImport_AbsoluteFilePath,
+          importResolutions.get(
+            `${descendantImportPath}::${unresolvedDescendant}`,
+          ),
         );
 
         // Guard Clause: if the import statement of this descendant is missing/invalid, log a warning and skip this descendant
-        if (!descendantImportPath) {
+        if (
+          !descendantImportPath ||
+          resolvedImport_RelativeFilePath.includes("node_modules")
+        ) {
           warnings.push(
             `WARNING: (build-schema) the descendant "${unresolvedDescendant}" of component "${componentName}" could not be resolved within the file "${relativeFilePath}"`,
           );
@@ -175,8 +199,12 @@ function build_schema(entryPoint, rootComponentName, verbosity = {}) {
             location: { filepath: resolvedImport_RelativeFilePath },
           });
 
-          if (resolvedImport_RelativeFilePath) {
-            // plan on visiting this descendant by adding it to the stack
+          // if import path is valid and file has not been resolved before,
+          if (
+            resolvedImport_RelativeFilePath &&
+            !filesVisited.get(resolvedImport_RelativeFilePath)
+          ) {
+            // resolve this descendant by visiting its source file (i.e. the resolved import)
             if (verbosity.verbose) {
               log(
                 `(build-schema) planning to visit "${resolvedImport_RelativeFilePath}" to resolve "${unresolvedDescendant}"`,
