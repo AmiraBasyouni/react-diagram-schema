@@ -12,17 +12,17 @@ function isInlineReactComponent(program_bodyPath) {
       return false;
     }
 
-    const inlineDeclaration = path.get("declarations")[0];
+    const inlineDeclarator = path.get("declarations")[0];
 
     // EARLY RETURN when it's an uninitialized variable (i.e. var name;)
-    if (!inlineDeclaration?.node.init) {
+    if (!inlineDeclarator?.node.init) {
       return false;
     }
 
     // Case 1) variable holds a function
     const isFunction =
-      inlineDeclaration?.node.init.type === "ArrowFunctionExpression" ||
-      inlineDeclaration?.node.init.type === "FunctionExpression";
+      inlineDeclarator?.node.init.type === "ArrowFunctionExpression" ||
+      inlineDeclarator?.node.init.type === "FunctionExpression";
 
     // Case 2 Part A)  variable holds forwardRef() or React.forwardRef()
     const isForwardRef = (path) =>
@@ -37,9 +37,9 @@ function isInlineReactComponent(program_bodyPath) {
 
     // Case 2 Part A&B)
     const isForwardRefReceivingFunction =
-      isForwardRef(inlineDeclaration) && isFunctionInsideRef(inlineDeclaration);
+      isForwardRef(inlineDeclarator) && isFunctionInsideRef(inlineDeclarator);
 
-    const isCamelCased = /^[A-Z]/.test(inlineDeclaration.node.id.name);
+    const isCamelCased = /^[A-Z]/.test(inlineDeclarator.node.id.name);
 
     return (isFunction || isForwardRefReceivingFunction) && isCamelCased;
   };
