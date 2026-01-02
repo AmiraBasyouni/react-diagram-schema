@@ -154,7 +154,11 @@ function build_schema(entryPoint, rootComponentName, verbosity = {}) {
         // collect the descendant's import path
         const descendantImportPath = parseImport(code, unresolvedDescendant);
         // if this import path was not resolved before,
-        if (!importResolutions.has(descendantImportPath)) {
+        if (
+          !importResolutions.has(
+            `${descendantImportPath}::${unresolvedDescendant}`,
+          )
+        ) {
           if (verbosity.verbose) {
             log(
               `(build-schema) planning to visit import path "${descendantImportPath}" to resolve "${unresolvedDescendant}"`,
@@ -169,18 +173,23 @@ function build_schema(entryPoint, rootComponentName, verbosity = {}) {
 
           // record resolution path
           importResolutions.set(
-            descendantImportPath,
+            `${descendantImportPath}::${unresolvedDescendant}`,
             resolvedImport_AbsoluteFilePath,
           );
         }
 
         // transform absolute file path to a relative file path
         const resolvedImport_RelativeFilePath = getRelativeFromAbsolutePath(
-          importResolutions.get(descendantImportPath),
+          importResolutions.get(
+            `${descendantImportPath}::${unresolvedDescendant}`,
+          ),
         );
 
         // Guard Clause: if the import statement of this descendant is missing/invalid, log a warning and skip this descendant
-        if (!descendantImportPath) {
+        if (
+          !descendantImportPath ||
+          resolvedImport_RelativeFilePath.includes("node_modules")
+        ) {
           warnings.push(
             `WARNING: (build-schema) the descendant "${unresolvedDescendant}" of component "${componentName}" could not be resolved within the file "${relativeFilePath}"`,
           );

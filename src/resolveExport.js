@@ -24,7 +24,6 @@ function resolveExport(symbolName, filePath, visited = new Set()) {
   traverse(ast, {
     ExportDefaultDeclaration() {
       if (targetPath) return;
-      //const { node } = pathNode;
       //console.log(`ExportDefaultDeclaration found in ${filePath}`);
 
       // If the symbol being asked for is the module’s default,
