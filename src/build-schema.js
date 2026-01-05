@@ -22,6 +22,7 @@ const components = {};
 const filesVisited = new Map();
 const importResolutions = new Map();
 const stack = [];
+const importedNames = [];
 
 // build_schema
 // 1. accepts <entryDirectory|entryFile> and [rootComponentName] and verbosity levels
@@ -152,7 +153,17 @@ function build_schema(entryPoint, rootComponentName, verbosity = {}) {
         }
         // otherwise,
         // collect the descendant's import path
-        const descendantImportPath = parseImport(code, unresolvedDescendant);
+        // and importedName i.e. ComponentA as A if relevant
+        const { importSource: descendantImportPath, importedName } =
+          parseImport(code, unresolvedDescendant);
+        // remember imported Names when relevant, to resolve them later
+        if (importedName && unresolvedDescendant !== importedName) {
+          importedNames.push({
+            importedName,
+            filepath: `${descendantImportPath}::${importedName}`,
+            unresolvedDescendant,
+          });
+        }
         // if this import path was not resolved before,
         if (
           !importResolutions.has(
@@ -165,17 +176,40 @@ function build_schema(entryPoint, rootComponentName, verbosity = {}) {
             );
           }
           // then resolve it as an absolute file path
-          const resolvedImport_AbsoluteFilePath = resolveComponent(
-            unresolvedDescendant,
-            path.resolve(process.cwd(), relativeFilePath),
-            descendantImportPath,
-          );
+          // case 1) import {ComponentA as A} where A is recorded
+          if (
+            importedName &&
+            unresolvedDescendant !== importedName &&
+            importResolutions.has(`${descendantImportPath}::${importedName}`)
+          ) {
+            // When importedName is relevant,
+            // AND NOT {ComponentA} (in {ComponentA}, unresolvedDescendant = importedName)
+            // AND we've resolved this import path before
+            // Derive the resolution from our list of resolutions
+            const resolvedImport_AbsoluteFilePath = importResolutions.get(
+              `${descendantImportPath}::${importedName}`,
+            );
+            // Then record ComponentA's resolution path
+            // (thus mapping the resolution of A to be the same as resolution of ComponentA)
+            importResolutions.set(
+              `${descendantImportPath}::${unresolvedDescendant}`,
+              resolvedImport_AbsoluteFilePath,
+            );
+          } else {
+            // case 2) when importedName is not relevant,
+            // resolve import normally
+            const resolvedImport_AbsoluteFilePath = resolveComponent(
+              unresolvedDescendant,
+              path.resolve(process.cwd(), relativeFilePath),
+              descendantImportPath,
+            );
 
-          // record resolution path
-          importResolutions.set(
-            `${descendantImportPath}::${unresolvedDescendant}`,
-            resolvedImport_AbsoluteFilePath,
-          );
+            // then record resolution path
+            importResolutions.set(
+              `${descendantImportPath}::${unresolvedDescendant}`,
+              resolvedImport_AbsoluteFilePath,
+            );
+          }
         }
 
         // transform absolute file path to a relative file path
@@ -186,13 +220,21 @@ function build_schema(entryPoint, rootComponentName, verbosity = {}) {
         );
 
         // Guard Clause: if the import statement of this descendant is missing/invalid, log a warning and skip this descendant
-        if (
-          !descendantImportPath ||
-          resolvedImport_RelativeFilePath.includes("node_modules")
-        ) {
+        if (!descendantImportPath) {
           warnings.push(
             `WARNING: (build-schema) the descendant "${unresolvedDescendant}" of component "${componentName}" could not be resolved within the file "${relativeFilePath}"`,
           );
+        } else if (
+          resolvedImport_RelativeFilePath &&
+          resolvedImport_RelativeFilePath.includes("node_modules")
+        ) {
+          // Guard Clause: if the import statement of this descendant leads to a node_modules file
+          // temporarily set unresolved descendant's file path to undefined
+          // UPCOMING BREAKING CHANGE, in the future, file path will be set to descendantImportPath
+          // e.g. TooltipPrimitive::@radix-ui/react-tooltip
+          component.descendants?.set(unresolvedDescendant, {
+            location: { filepath: undefined },
+          });
         } else {
           // update component's descendant's file path
           component.descendants?.set(unresolvedDescendant, {
@@ -212,7 +254,7 @@ function build_schema(entryPoint, rootComponentName, verbosity = {}) {
             }
             stack.push({
               entryPoint: resolvedImport_RelativeFilePath,
-              componentName: unresolvedDescendant,
+              componentName: importedName ? importedName : unresolvedDescendant,
             });
           }
         }
@@ -227,6 +269,15 @@ function build_schema(entryPoint, rootComponentName, verbosity = {}) {
       }
     });
   }
+
+  // Lastly, create a duplicate component for each importedName
+  // e.g. in the case of {ComponentA as A}, create A such that A = ComponentA
+  importedNames.forEach(({ importedName, filepath, unresolvedDescendant }) => {
+    const filepathResolution = importResolutions.get(filepath);
+    const relativeResolution = getRelativeFromAbsolutePath(filepathResolution);
+    components[`${unresolvedDescendant}::${relativeResolution}`] =
+      components[`${importedName}::${relativeResolution}`];
+  });
 
   // END TIMER
   const end = process.hrtime(start); // Calculates difference from start
@@ -243,7 +294,7 @@ function build_schema(entryPoint, rootComponentName, verbosity = {}) {
   }
 
   // log success message since we have completed the parsing and schema generation process
-  if (verbosity.verbose) {
+  if (!verbosity.quiet) {
     log(
       `✅ Success: Parsed ${Object.keys(components).length} components from ${filesVisited.size} files in ${durationInMs} milliseconds`,
     );

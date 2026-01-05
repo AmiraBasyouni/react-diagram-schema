@@ -25,36 +25,45 @@ function parseImport(code, descendantName) {
       const importStatement_paths = program_bodyPath.filter((path) =>
         path.isImportDeclaration(),
       );
-      const ourImportStatement_array = importStatement_paths.filter(
-        (importStatement_path) => {
-          return importStatement_path
-            .get("specifiers")
-            .some((specifier_path) => {
-              /* case1: 'import ComponentA from './ComponentA' */
-              if (specifier_path.isImportDefaultSpecifier) {
-                return specifier_path.get("local").node.name === descendantName;
-              }
-              /* case2: 'import {ComponentA} from './ComponentA'*/
-              if (specifier_path.isImportSpecifier) {
-                return specifier_path.get("local").node.name === descendantName;
-              }
-              return false;
-            });
-        },
-      );
+      const ourImportStatement_array = [];
+      importStatement_paths.map((importStatement_path) => {
+        return importStatement_path.get("specifiers").some((specifier_path) => {
+          /* case1: 'import ComponentA from './ComponentA' */
+          if (specifier_path.isImportDefaultSpecifier()) {
+            const importedName = specifier_path.node.local.name;
+            if (specifier_path.node.local.name === descendantName) {
+              ourImportStatement_array.push({
+                importStatement_path,
+                importedName,
+              });
+            }
+          } else if (specifier_path.isImportSpecifier()) {
+            /* case2: 'import {ComponentA} from './ComponentA'*/
+            /* case3: 'import {ComponentA as A} from './ComponentA'*/
+            const importedName = specifier_path.node.imported.name;
+            if (specifier_path.get("local").node.name === descendantName) {
+              ourImportStatement_array.push({
+                importStatement_path,
+                importedName,
+              });
+            }
+          }
+        });
+      });
 
       /* if we found an import that matches our descendant's name, */
       if (ourImportStatement_array.length > 0) {
-        const importSource =
-          ourImportStatement_array[0].get("source").node.value;
+        const { importStatement_path, importedName } =
+          ourImportStatement_array[0];
+        const importSource = importStatement_path.get("source").node.value;
         importSource.startsWith("./") ||
         importSource.startsWith("../") ||
         importSource.startsWith("@")
-          ? (returnValue = importSource)
-          : (returnValue = null);
+          ? (returnValue = { importSource, importedName })
+          : (returnValue = {});
         //returnValue = ourImportStatement_array[0].get("source").node.value;
       } else {
-        returnValue = null;
+        returnValue = {};
       }
     },
   });
