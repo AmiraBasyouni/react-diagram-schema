@@ -53,9 +53,10 @@ function parseCode(code, filepath) {
         reactFunctionDeclarationPaths,
         reactDefaultExportDeclarationPaths,
         reactAnonymousDeclarationPaths,
+        reactClassDeclarationPaths,
       } = sortPaths(program_bodyPath);
 
-      //APPEND COMPONENT-LOGIC TO SCHEMA
+      //APPEND const Component = as TO SCHEMA
       variableDeclaratorPaths.map((declarator) => {
         const name = declarator.node.id.name;
         const init = declarator.get("init");
@@ -77,6 +78,26 @@ function parseCode(code, filepath) {
           location,
           unresolvedDescendants: [],
           unresolvedInitializer: identifier,
+        };
+      });
+
+      //APPEND class Component extends React.Component{} TO SCHEMA
+      reactClassDeclarationPaths.map((declarator) => {
+        const name = declarator.node.id.name;
+        const location = {
+          line: declarator.node?.loc.start.line,
+          filepath,
+        };
+        components[`${name}::${filepath}`] = {
+          name,
+          description: "",
+          type: "class",
+          descendants: [],
+          internal: { states: [], functions: [] },
+          external: { props: [], context: [], constants: [] },
+          defaultExport: false,
+          location,
+          unresolvedDescendants: [],
         };
       });
 
