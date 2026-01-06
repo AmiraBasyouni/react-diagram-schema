@@ -23,6 +23,7 @@ const filesVisited = new Map();
 const importResolutions = new Map();
 const stack = [];
 const importedNames = [];
+const node_modules = [];
 
 // build_schema
 // 1. accepts <entryDirectory|entryFile> and [rootComponentName] and verbosity levels
@@ -198,6 +199,7 @@ function build_schema(entryPoint, rootComponentName, verbosity = {}) {
           } else {
             // case 2) when importedName is not relevant,
             // resolve import normally
+            // NOTE resolveComponent might return a node_modules path (because of case 4 in resolveImport)
             const resolvedImport_AbsoluteFilePath = resolveComponent(
               unresolvedDescendant,
               path.resolve(process.cwd(), relativeFilePath),
@@ -229,12 +231,13 @@ function build_schema(entryPoint, rootComponentName, verbosity = {}) {
           resolvedImport_RelativeFilePath.includes("node_modules")
         ) {
           // Guard Clause: if the import statement of this descendant leads to a node_modules file
-          // temporarily set unresolved descendant's file path to undefined
-          // UPCOMING BREAKING CHANGE, in the future, file path will be set to descendantImportPath
+          // BREAKING CHANGE, file path will be set to descendantImportPath
           // e.g. TooltipPrimitive::@radix-ui/react-tooltip
           component.descendants?.set(unresolvedDescendant, {
-            location: { filepath: undefined },
+            location: { filepath: descendantImportPath },
           });
+          // add path to node_modules
+          node_modules.push({ unresolvedDescendant, descendantImportPath });
         } else {
           // update component's descendant's file path
           component.descendants?.set(unresolvedDescendant, {
@@ -277,6 +280,30 @@ function build_schema(entryPoint, rootComponentName, verbosity = {}) {
     const relativeResolution = getRelativeFromAbsolutePath(filepathResolution);
     components[`${unresolvedDescendant}::${relativeResolution}`] =
       components[`${importedName}::${relativeResolution}`];
+  });
+
+  // And, create a component for each node_modules file
+  node_modules.forEach(({ unresolvedDescendant, descendantImportPath }) => {
+    components[`${unresolvedDescendant}::${descendantImportPath}`] = {
+      name: unresolvedDescendant,
+      description: "",
+      type: "node_module",
+      descendants: [],
+      internal: {
+        states: [],
+        functions: [],
+      },
+      external: {
+        props: [],
+        context: [],
+        constants: [],
+      },
+      defaultExport: undefined,
+      location: {
+        line: undefined,
+        filepath: descendantImportPath,
+      },
+    };
   });
 
   // END TIMER

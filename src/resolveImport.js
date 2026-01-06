@@ -66,9 +66,21 @@ function resolveImport(fromFile, importedName) {
         }
       }
 
+      try {
+        // e.g. /node_modules/@xyflow/react/dist/umd/index.js
+        if (resolved) {
+          //console.log(
+          //  `[resolveImport] node_modules resolved "${importedName}" from "${fromFile}" -> ${resolved}`,
+          //);
+          return resolved;
+        }
+        /* eslint-disable no-unused-vars */
+      } catch (err) {
+        // Module not found in node_modules
+      }
+
       /* eslint-disable no-unused-vars */
     } catch (err) {
-      /* eslint-enable no-unused-vars */
       // If the module cannot be found using the resolution algorithm, require.resolve() will throw an error, just like require() would
       //console.log(
       //  `[resolveImport] Node could NOT resolve "${importedName}" from "${fromFile}". Trying tsconfig fallback...`,
@@ -79,8 +91,9 @@ function resolveImport(fromFile, importedName) {
     try {
       const resolvedDir = resolveTypeScriptPath(fromFile, importedName);
       return resolvedDir;
+      /* eslint-disable no-unused-vars */
     } catch (err) {
-      console.log(`[resolveImport] tsconfig resolution error: ${err}`);
+      //console.log(`[resolveImport] tsconfig resolution error: ${err}`);
     }
 
     // 3. Manual fallback: check extensions (.js, .jsx, .ts, .tsx)

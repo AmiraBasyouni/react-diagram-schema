@@ -52,15 +52,12 @@ function parseImport(code, descendantName) {
       });
 
       /* if we found an import that matches our descendant's name, */
+
       if (ourImportStatement_array.length > 0) {
         const { importStatement_path, importedName } =
           ourImportStatement_array[0];
         const importSource = importStatement_path.get("source").node.value;
-        importSource.startsWith("./") ||
-        importSource.startsWith("../") ||
-        importSource.startsWith("@")
-          ? (returnValue = { importSource, importedName })
-          : (returnValue = {});
+        returnValue = { importSource, importedName };
         //returnValue = ourImportStatement_array[0].get("source").node.value;
       } else {
         returnValue = {};
