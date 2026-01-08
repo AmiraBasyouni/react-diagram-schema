@@ -1,6 +1,6 @@
 {
   "name": "react-diagram-schema",
-  "version": "0.3.6",
+  "version": "0.3.7",
   "description": "CLI tool that parses React components and generates a structured JSON schema capturing component hierarchy, state, props, and context",
   "main": "./src/build-schema.js",
   "scripts": {

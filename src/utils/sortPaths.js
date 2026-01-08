@@ -7,6 +7,7 @@ function sortPaths(program_bodyPath) {
   const reactFunctionDeclarationPaths = [];
   const reactDefaultExportDeclarationPaths = [];
   const reactAnonymousDeclarationPaths = [];
+  const reactClassDeclarationPaths = [];
 
   program_bodyPath.map((path) => {
     // Extract export (default and named) declarations
@@ -50,6 +51,17 @@ function sortPaths(program_bodyPath) {
     ) {
       reactAnonymousDeclarationPaths.push(declaration);
     }
+
+    // Extract react Class Declarations
+    if (declaration.isClassDeclaration()) {
+      if (
+        declaration.node.superClass.object.name === "React" &&
+        (declaration.node.superClass.property.name === "Component" ||
+          declaration.node.superClass.property.name === "PureComponent")
+      ) {
+        reactClassDeclarationPaths.push(declaration);
+      }
+    }
   });
 
   return {
@@ -58,6 +70,7 @@ function sortPaths(program_bodyPath) {
     reactFunctionDeclarationPaths,
     reactDefaultExportDeclarationPaths,
     reactAnonymousDeclarationPaths,
+    reactClassDeclarationPaths,
   };
 }
 
@@ -72,7 +85,9 @@ const isExportDeclaration = (path) =>
 const isAnonymousDeclaration = (declaration) => Boolean(!declaration.node.id);
 
 // ---------------------------------------------------------------------
-const isCamelCased = (declarator) => /^[A-Z]/.test(declarator.node.id?.name);
+const isCamelCased = (declarator) =>
+  /^[A-Z]/.test(declarator.node.id?.name) &&
+  !declarator.node.id?.name.includes("_");
 
 // ---------------------------------------------------------------------
 const isInlineReactComponent = (declarator) => {
