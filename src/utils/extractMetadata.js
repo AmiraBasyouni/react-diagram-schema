@@ -1,6 +1,5 @@
 // extractMetadata.js
-const isFunctionDefinedReactComponent = require("./isFunctionDefinedReactComponent");
-const isInlineReactComponent = require("./isInlineReactComponent");
+const sortPaths = require("./sortPaths");
 
 function extractMetadata(
   componentPaths,
@@ -11,6 +10,7 @@ function extractMetadata(
 ) {
   const nestedFunctionDefinedComponents = [];
   const nestedInlineComponents = [];
+  const nestedInlineVariables = [];
   //EXTRACT { name: "", internal: {states: [], functions: []}, location: null } FROM EACH REACT COMPONENT
   function extract(componentPaths, type) {
     return componentPaths.map((componentPath) => {
@@ -84,17 +84,18 @@ function extractMetadata(
         obj.internal.functions.push(...inline);
 
         //EXTRACT nested COMPONENTS
-        const nestedFunctionDefinedComponents_extracted =
-          blockStatementBody_array.filter((path) =>
-            isFunctionDefinedReactComponent(path),
-          );
+        const {
+          variableDeclaratorPaths: nestedInlineVariables_extracted,
+          reactVariableDeclaratorPaths: nestedInlineComponents_extracted,
+          reactFunctionDeclarationPaths:
+            nestedFunctionDefinedComponents_extracted,
+        } = sortPaths(blockStatementBody_array);
+
         nestedFunctionDefinedComponents.push(
           ...nestedFunctionDefinedComponents_extracted,
         );
-        const nestedInlineComponents_extracted = blockStatementBody_array
-          .filter((path) => isInlineReactComponent(path))
-          .map((declaration) => declaration.get("declarations")[0]);
         nestedInlineComponents.push(...nestedInlineComponents_extracted);
+        nestedInlineVariables.push(...nestedInlineVariables_extracted);
 
         // helper functions: verify node path and valid state variable
         const isValidPath = (path) =>
@@ -213,15 +214,23 @@ function extractMetadata(
     nestedInlineComponents,
     "inline",
   );
+  const nestedInlineVariablesMetadata = extract(
+    nestedInlineVariables,
+    "inline",
+  );
   nestedFunctionDefinedComponentsMetadata.map(
     (nestedComponent) => (nestedComponent.nested = true),
   );
   nestedInlineComponentsMetadata.map(
     (nestedComponent) => (nestedComponent.nested = true),
   );
+  nestedInlineVariablesMetadata.map(
+    (nestedVariable) => (nestedVariable.nested = true),
+  );
 
   metadata.push(...nestedFunctionDefinedComponentsMetadata);
   metadata.push(...nestedInlineComponentsMetadata);
+  metadata.push(...nestedInlineVariablesMetadata);
 
   return metadata;
 }
