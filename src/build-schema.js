@@ -136,6 +136,11 @@ function build_schema(entryPoint, rootComponentName, verbosity = {}) {
       } else {
         components[`${component.name}::${relativeFilePath}`] = component;
       }
+      // if this is the first parsed component
+      if (Object.keys(components).length === 1) {
+        // mark it as the entry component
+        components[Object.keys(components)[0]]["isEntryComponent"] = true;
+      }
     });
 
     // UNRESOLVED DESCENDANTS
