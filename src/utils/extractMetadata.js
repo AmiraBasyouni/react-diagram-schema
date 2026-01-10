@@ -238,7 +238,7 @@ function extractMetadata(
 function extractComponentDescendants(returnStatementPath, filepath, code, obj) {
   //EXTRACT component descendants
   const descendantsMap = new Map();
-  (returnStatementPath.traverse({
+  (returnStatementPath?.traverse({
     JSXElement(childPath) {
       const opening = childPath.node.openingElement;
 
