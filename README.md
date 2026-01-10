@@ -1,31 +1,21 @@
-# react-diagram-schema
+# Intro
 
 `react-diagram-schema` is a CLI tool that transforms React source code into a JSON schema. The schema can be handed to [react-diagram-visualizer](https://github.com/AmiraBasyouni/react-diagram-visualizer) (a [ReactFlow](https://reactflow.dev/) based tool that renders the schema as an interactive UML-style diagram)
 
 ## Table of Contents
 
-- [Limitations](#limitations)
 - [Installation](#installation)
 - [Usage](#usage)
-- [Example Usage](#example-usage)
+- [Example Output](#example-output)
+- [Arguments](#arguments)
 - [Flags](#flags)
 - [Troubleshooting](#troubleshooting)
 - [About JSON Schema](#about-json-schema)
+- [Dependencies](#dependencies)
+- [Limitations](#limitations)
 - [Roadmap](#roadmap)
 - [Contributing](#contributing)
 - [License](#license)
-
-## Limitations
-
-This CLI tool currently parses JavaScript (`.js` / `.jsx`) and TypeScript (`.ts` / `.tsx`) files but does not extract additional information from TypeScript files.
-
-Extracting types from `.ts` / `.tsx` files is a planned feature that could be introduced in the future. To learn more regarding next steps and future plans, check out the [ROADMAP.md](https://github.com/AmiraBasyouni/react-diagram-schema/blob/main/ROADMAP.md) document.
-
-**Major Dependencies**
-
-- [@babel/parser](https://www.npmjs.com/package/@babel/parser) - Parses JavaScript code into an AST
-- [@babel/traverse](https://www.npmjs.com/package/@babel/traverse) - Walks the AST and extracts component data
-- [typescript](https://www.npmjs.com/package/typescript) - Compiles TypeScript/TSX files into JavaScript/JSX
 
 ## Installation
 
@@ -49,25 +39,9 @@ npm install
 npm install -g react-diagram-schema
 ```
 
-## Arguments
-
-The CLI tool accepts two positional arguments:
-
-1. **(required)** `<entryDirectory>` or `<entryFile>`  
-   Path to your application's entry directory or entry file.  
-   Example: `./src/` or `./src/index.js`
-
-2. _(optional)_ `[rootComponentName]`  
-   Name of the root React component defined in the entry file.  
-   If omitted, the tool falls back to the default export,  
-   either from the entry file (if `<entryFile>` was provided)  
-   or an index file (`index.tsx`, `index.ts`, `index.jsx`, or `index.js`)
-   in the entry directory.  
-   Example: `App`
-
 ## Usage
 
-**If Not Installed,**
+**Without Installing,**
 
 run on your React source code directly with `npx`:
 
@@ -75,15 +49,52 @@ run on your React source code directly with `npx`:
 npx react-diagram-schema <entryDirectory|entryFile> [rootComponentName]
 ```
 
-Example:
+Examples:
 
-```bash
-npx react-diagram-schema ./src/components/App/ App
-```
+1. If the name of the component matches the name of the file,  
+   supplying just the `<entryFile>` or the `<entryDirectory>` + `[rootComponentName]` is sufficient:
+
+- For an App.jsx file, targeting a component App,
+
+  ```bash
+  npx react-diagram-schema ./src/components/App.jsx
+  ```
+
+  ```bash
+  npx react-diagram-schema ./src/components/App/ App
+  ```
+
+2. index.(js/jsx/ts/tsx) files are checked automatically.  
+   Thus, when targeting an index file, `<entryFile>` becomes optional:
+
+- For an index.jsx file, targeting a component Scroll
+  ```bash
+  npx react-diagram-schema ./src/components/ Scroll
+  ```
+  ```bash
+  npx react-diagram-schema ./src/components/index.jsx Scroll
+  ```
+
+3. If the name of the component does not match the name of the file,  
+   you must explicitly supply both `<entryFile>` + `[rootComponentName]`:
+
+- targeting a component Button
+  ```bash
+  npx react-diagram-schema ./src/components/App/App.jsx Button
+  ```
+
+4. If the target component is not supplied, the fallback is  
+   either assuming that the component name matches the file name (i.e. the first example)  
+   or assuming that the target component is default exported:
+
+- targeting a default exported component
+  ```bash
+  npx react-diagram-schema ./src/components/index.jsx
+  ```
 
 ---
 
-**If Installed Locally,**
+**After Installing Locally,**
 
 1. Navigate to `react-diagram-schema`'s root directory:
 
@@ -106,37 +117,51 @@ npx react-diagram-schema ./src/components/App/ App
    ```
 
    ```bash
-   build-schema ./
+   react-diagram-schema ./
    ```
 
 ---
 
-**If Installed Globally,**
+**After Installing Globally,**
 
 run from any directory:
 
 ```bash
-build-schema <entryDirectory|entryFile> [rootComponentName]
+react-diagram-schema <entryDirectory|entryFile> [rootComponentName]
 ```
 
 Example:
 
 ```bash
-build-schema ./Header.jsx Header
+react-diagram-schema ./Header.jsx Header
 ```
 
----
+## Example Output
 
-## Example Usage
+**Setup**
 
-**Setup**  
-Imagine `react-diagram-schema` is installed locally, and the current working directory is the repository root.
+- Locally installed `react-diagram-schema`
+- The current working directory is `./react-diagram-schema/`.
 
-**Command**  
-`./src/build-schema ./sample-components/ App`
+**Command**
+
+- Targeting the sample file App.js (_located in `./sample-components/`_) for component App:
+  ```bash
+  react-diagram-schema ./sample-components/ App
+  ```
 
 **Result**  
-The command generates a `schema.json` file with the following structure:
+I get the following messages in the Console:
+
+```
+✅ Success: Parsed 4 components from 2 files in 50.585535 milliseconds
+```
+
+```
+💾 Saved: Schema has been written to react-diagram-schema/schema.json
+```
+
+The `schema.json` file is written to your current working directory, and has the following structure:
 
 ```json
 {
@@ -172,7 +197,8 @@ The command generates a `schema.json` file with the following structure:
     "location": {
       "line": 7,
       "filepath": "sample-components/App.js"
-    }
+    },
+    "isEntryComponent": true
   },
   "Content::sample-components/App.js": {
     "name": "Content",
@@ -235,37 +261,31 @@ The command generates a `schema.json` file with the following structure:
 }
 ```
 
-This schema can be rendered as an interactive diagram using [react-diagram-visualizer](https://github.com/AmiraBasyouni/react-diagram-visualizer):
+This schema can then be rendered as an interactive diagram using [react-diagram-visualizer](https://github.com/AmiraBasyouni/react-diagram-visualizer):
 
 ![ReactFlow Diagram](assets/readme-md-diagram-preview.png)
 
-The generated schema can also be passed to custom tools for further analysis.
+Checkout [react-diagram-visualizer](https://github.com/AmiraBasyouni/react-diagram-visualizer) to learn more about visualizing the schema.
+
+Another option is to pass the schema to your own custom built tools for further analysis.
+
+## Arguments
+
+The CLI tool accepts two positional arguments:
+
+1. **(required)** `<entryDirectory>` or `<entryFile>`  
+   This is a path to your application's entry directory or entry file.  
+   Example: `./src/` or `./src/index.js`
+
+2. _(optional)_ `[rootComponentName]`  
+   This is the name of the React component defined in the entry file.  
+   If omitted, the tool falls back to the default export,  
+   either from the entry file (if `<entryFile>` was provided)  
+   or an index file (`index.tsx`, `index.ts`, `index.jsx`, or `index.js`)
+   in the entry directory.  
+   Example: `App` or `Button`
 
 ## Flags
-
-**Quiet**  
-Purpose: suppresses error and warning console messages, showing only success messages. Critical errors will still be printed if the program fails to run.
-Usage: append `--quiet` to the end of your command like so:
-
-```bash
-build-schema ./components/App App --quiet
-```
-
-**Verbose**  
-Purpose: prints all error and warning console messages.  
-Usage: append `--verbose` to the end of your command like so:
-
-```bash
-build-schema ./components/App App --verbose
-```
-
-**Debug**  
-Purpose: prints error and warning console messages, and also outputs the generated JSON schema to the console for quick inspection.  
-Usage: append `--debug` to the end of your command like so:
-
-```bash
-build-schema ./components/App App --debug
-```
 
 **Output File**
 Purpose: specify the filename/path where the schema should be saved.  
@@ -273,7 +293,31 @@ Note: By default, a `schema.json` file will be saved in your current working dir
 Usage: append `--out` or `--output` to the end of your command like so:
 
 ```bash
-build-schema ./src App --out ./dist/my-schema.json
+react-diagram-schema ./src App --out ./archive/my-schema.json
+```
+
+**Quiet**  
+Purpose: suppresses success, error, and warning console messages. Critical errors will still be printed if the program fails to run. A request to overwrite a pre-existing json file will also be printed if relevant.  
+Usage: append `--quiet` to the end of your command like so:
+
+```bash
+react-diagram-schema ./components/App App --quiet
+```
+
+**Verbose**  
+Purpose: prints all error and warning console messages.  
+Usage: append `--verbose` to the end of your command like so:
+
+```bash
+react-diagram-schema ./components/App App --verbose
+```
+
+**Debug**  
+Purpose: prints error and warning console messages, and also prints the generated JSON schema to the console for quick inspection.  
+Usage: append `--debug` to the end of your command like so:
+
+```bash
+react-diagram-schema ./components/App App --debug
 ```
 
 ## Troubleshooting
@@ -286,9 +330,12 @@ build-schema ./src App --out ./dist/my-schema.json
 ✅ Success: Parsed 0 components from 0 files in 0.252575 milliseconds
 ```
 
+This runtime error implies that the CLI tool could not find any components in the provided/fallback files.
+
 Tips:
 
-- If the entry file does not contain a default export, ensure the `[rootComponentName]` field is provided.
+- Check whether the supplied `<entryFile>` contains at least one component declaration.
+- If supplying an `<entryDirectory>`, check whether a `[rootComponentName]`.(js/jsx/ts/tsx) or index.(js/jsx/ts/tsx) file exists in the entry directory.
 
 ---
 
@@ -301,13 +348,13 @@ invalid path
 Error: (build-schema) invalid path "undefined", please provide a valid directory or file path as your first argument (e.g. "./src")
 ```
 
-This error may occur in the following cases:
+This error may occur in the following scenarios:
 
-1. The first argument to the `build-schema` executable was omitted.
+1. The first argument to `react-diagram-schema` was omitted.
 2. An invalid first argument was provided (for example, the file path or directory does not exist).
 
 _Hint:_  
-_Ensure the current directory and first argument are valid before running `build-schema` (example argument: `./components`)_
+_Ensure the current directory and first argument are valid before running `react-diagram-schema` (example argument: `./components`)_
 
 ---
 
@@ -320,7 +367,7 @@ invalid component name
 Error: (build-schema) invalid component name "app", please provide a valid component name as your second argument (e.g. "App")
 ```
 
-This error may occur in the following cases:
+This error may occur in the following scenarios:
 
 1.  An invalid second argument was provided (e.g. the component name did not start with a capital letter).
 
@@ -338,40 +385,53 @@ descendant could not be resolved
 WARNING: (build-schema) the descendant <descendant-name> of component <component-name> could not be resolved within the file <file-path>
 ```
 
-This warning may occur in the following cases:
+This warning may occur in the following scenarios:
 
 1. The file indicated in `<file-path>` does not exist or could not be found by the parser.
-2. The descendant was imported from `node_modules` (if this is the case, then you can safely ignore this warning).
 
 _Hint:_  
 _Look for the file indicated in `<file-path>`_
 
 ## About JSON Schema
 
-- Stores **general** data such as:
-  - a component's name
-  - description about the component's purpose (which will be integrated using inline comments)
-  - a component's descendants (the component's direct children)
-  - a component's location (more specifically, the file path and declaration line)
+- The schema stores parsed components as objects, parses each component's:
+  - name
+  - description (the component's purpose, which will be integrated post-MVP using inline comments)
+  - descendants (the component's direct children)
+  - location (more specifically, the file path and declaration line)
 
 ---
 
-- Stores **internally defined** data such as:
+- The schema stores the parsed components' **internally defined** data such as:
   - states and state setters
   - function declarations
 
 ---
 
-- Stores **externally defined** data such as:
+- The schema stores the parsed components' **input** data such as:
   - props
   - context dependencies
   - constants (which will be integrated in future releases)
 
 ---
 
-- Describes your app’s structure
-- Can power other tools or workflows; feel free to reuse it however you like
-- Integrates seamlessly with [react-diagram-visualizer](https://github.com/AmiraBasyouni/react-diagram-visualizer) (a [ReactFlow](https://reactflow.dev/) based tool that renders the schema as an interactive UML-style diagram)
+The schema
+
+- describes your app’s structure
+- integrates seamlessly with [react-diagram-visualizer](https://github.com/AmiraBasyouni/react-diagram-visualizer) (a [ReactFlow](https://reactflow.dev/) based tool that renders the schema as an interactive UML-style diagram)
+- can power your custom built tools or workflows (feel free to reuse it however you like)
+
+## Dependencies
+
+- [@babel/parser](https://www.npmjs.com/package/@babel/parser) - Parses JavaScript code into an AST
+- [@babel/traverse](https://www.npmjs.com/package/@babel/traverse) - Walks the AST and extracts component data
+- [typescript](https://www.npmjs.com/package/typescript) - Compiles TypeScript/TSX files into JavaScript/JSX
+
+## Limitations
+
+This CLI tool currently parses JavaScript (`.js` / `.jsx`) and TypeScript (`.ts` / `.tsx`) files but does not extract additional information from TypeScript files.
+
+Extracting types from `.ts` / `.tsx` files is a planned feature that could be introduced in the future. To learn more regarding next steps and future plans, check out the [ROADMAP.md](https://github.com/AmiraBasyouni/react-diagram-schema/blob/main/ROADMAP.md) document.
 
 ## Roadmap
 
