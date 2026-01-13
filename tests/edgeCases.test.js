@@ -1,4 +1,5 @@
 // edgeCases.test.js
+// Goal: Handle tricky structures like nested components, default exports, and files with missing metadata.
 const parseCode = require("../src/parseCode");
 
 describe("Edge Cases", () => {

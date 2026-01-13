@@ -1,4 +1,6 @@
-// props, state, context
+// dataExtraction.test.js
+// Goal: Ensure props, states, context, and functions are accurately extracted from components.
+// Cases Covered: props, state, context
 const parseCode = require("../src/parseCode");
 
 describe("Data Extraction", () => {
