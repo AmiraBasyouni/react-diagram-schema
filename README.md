@@ -1,6 +1,39 @@
 # Intro
 
-`react-diagram-schema` is a CLI tool that transforms React source code into a JSON schema. The schema can be handed to [react-diagram-visualizer](https://github.com/AmiraBasyouni/react-diagram-visualizer) (a [ReactFlow](https://reactflow.dev/) based tool that renders the schema as an interactive UML-style diagram)
+`react-diagram-schema` is a CLI tool that parses React source code to generate a JSON schema of your component architecture.
+
+The schema is intended to be consumed by tooling and integrations (like the visualizer below, or tools you build yourself).
+
+**Generate the schema:**
+
+```bash
+npx react-diagram-schema ./src/App.jsx
+```
+
+**Example**: visualize your React codebase
+
+```bash
+npx react-diagram-visualizer ./src/App.jsx
+```
+
+[react-diagram-visualizer](https://github.com/AmiraBasyouni/react-diagram-visualizer) consumes the schema to render an interactive UML-style diagram powered by [ReactFlow](https://reactflow.dev/)
+
+No installation or configuration required.  
+Works on projects of any size, from 1-component prototypes to 100+ component production apps.
+
+---
+
+**What you can build with the schema:**
+
+The schema enables custom tooling for various development workflows:
+
+- **Visualization tools** - Render component hierarchies, data flow, and relationships (e.g., react-diagram-visualizer)
+- **Architectural analysis** - Verify correctness, detect anti-patterns, measure complexity
+- **Documentation generators** - Auto-generate architecture docs synced with code
+- **Refactoring assistants** - Prototype structural changes and assess impact
+- **Onboarding tools** - Help new developers navigate unfamiliar codebases
+
+Below you'll find installation options, detailed usage examples, and troubleshooting guidance.
 
 ## Table of Contents
 
@@ -265,7 +298,7 @@ This schema can then be rendered as an interactive diagram using [react-diagram-
 
 ![ReactFlow Diagram](assets/readme-md-diagram-preview.png)
 
-Checkout [react-diagram-visualizer](https://github.com/AmiraBasyouni/react-diagram-visualizer) to learn more about visualizing the schema.
+Checkout [react-diagram-visualizer](https://github.com/AmiraBasyouni/react-diagram-visualizer) to learn more about the visualizer.
 
 Another option is to pass the schema to your own custom built tools for further analysis.
 
