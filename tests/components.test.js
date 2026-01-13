@@ -1,4 +1,6 @@
-// function + inline + multi-component tests
+// components.test.js
+// Goal: Validate that function-defined and inline components are correctly parsed.
+// Cases Covered: function, inline, multi-component tests
 const parseCode = require("../src/parseCode");
 
 describe("Component Parsing", () => {
