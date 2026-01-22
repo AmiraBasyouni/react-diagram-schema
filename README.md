@@ -1,39 +1,25 @@
-# Intro
+# Introduction
 
-`react-diagram-schema` is a CLI tool that parses React source code to generate a JSON schema of your component architecture.
+`react-diagram-schema` is a CLI tool that statically parses React source code to generate a structured JSON schema representing a component tree rooted at a chosen entry component.
+
+No installation or configuration required to get started.  
+You can generate a schema starting from any component, from a single isolated component to the full application tree.
 
 The schema is intended to be consumed by tooling and integrations (like the visualizer below, or tools you build yourself).
 
-**Generate the schema:**
+**Quick Start**
 
 ```bash
 npx react-diagram-schema ./src/App.jsx
 ```
 
-**Example**: visualize your React codebase
+**Downstream Consumer Example**:
 
 ```bash
 npx react-diagram-visualizer ./src/App.jsx
 ```
 
-[react-diagram-visualizer](https://github.com/AmiraBasyouni/react-diagram-visualizer) consumes the schema to render an interactive UML-style diagram powered by [ReactFlow](https://reactflow.dev/)
-
-No installation or configuration required.  
-Works on projects of any size, from 1-component prototypes to 100+ component production apps.
-
----
-
-**What you can build with the schema:**
-
-The schema enables custom tooling for various development workflows:
-
-- **Visualization tools** - Render component hierarchies, data flow, and relationships (e.g., react-diagram-visualizer)
-- **Architectural analysis** - Verify correctness, detect anti-patterns, measure complexity
-- **Documentation generators** - Auto-generate architecture docs synced with code
-- **Refactoring assistants** - Prototype structural changes and assess impact
-- **Onboarding tools** - Help new developers navigate unfamiliar codebases
-
-Below you'll find installation options, detailed usage examples, and troubleshooting guidance.
+[`react-diagram-visualizer`](https://github.com/AmiraBasyouni/react-diagram-visualizer) is a web application that internally generates and consumes the JSON schema to render an interactive UML-style diagram.
 
 ## Table of Contents
 
@@ -55,15 +41,7 @@ Below you'll find installation options, detailed usage examples, and troubleshoo
 **To Install Locally:**
 
 ```bash
-git clone https://github.com/AmiraBasyouni/react-diagram-schema
-```
-
-```bash
-cd react-diagram-schema
-```
-
-```bash
-npm install
+npm install react-diagram-schema
 ```
 
 **To Install Globally:**
@@ -74,9 +52,7 @@ npm install -g react-diagram-schema
 
 ## Usage
 
-**Without Installing,**
-
-run on your React source code directly with `npx`:
+**Run directly with `npx`** (no installation required)
 
 ```bash
 npx react-diagram-schema <entryDirectory|entryFile> [rootComponentName]
@@ -84,103 +60,31 @@ npx react-diagram-schema <entryDirectory|entryFile> [rootComponentName]
 
 Examples:
 
-1. If the name of the component matches the name of the file,  
-   supplying just the `<entryFile>` or the `<entryDirectory>` + `[rootComponentName]` is sufficient:
+```bash
+npx react-diagram-schema ./src/App.jsx
+```
 
-- For an App.jsx file, targeting a component App,
-
-  ```bash
-  npx react-diagram-schema ./src/components/App.jsx
-  ```
-
-  ```bash
-  npx react-diagram-schema ./src/components/App/ App
-  ```
-
-2. index.(js/jsx/ts/tsx) files are checked automatically.  
-   Thus, when targeting an index file, `<entryFile>` becomes optional:
-
-- For an index.jsx file, targeting a component Scroll
-  ```bash
-  npx react-diagram-schema ./src/components/ Scroll
-  ```
-  ```bash
-  npx react-diagram-schema ./src/components/index.jsx Scroll
-  ```
-
-3. If the name of the component does not match the name of the file,  
-   you must explicitly supply both `<entryFile>` + `[rootComponentName]`:
-
-- targeting a component Button
-  ```bash
-  npx react-diagram-schema ./src/components/App/App.jsx Button
-  ```
-
-4. If the target component is not supplied, the fallback is  
-   either assuming that the component name matches the file name (i.e. the first example)  
-   or assuming that the target component is default exported:
-
-- targeting a default exported component
-  ```bash
-  npx react-diagram-schema ./src/components/index.jsx
-  ```
+```bash
+npx react-diagram-schema ./src/components/App/ App
+```
 
 ---
 
-**After Installing Locally,**
-
-1. Navigate to `react-diagram-schema`'s root directory:
-
-   ```bash
-   cd react-diagram-schema
-   ```
-
-2. Create a symbolic link:
-
-   ```bash
-   npm link
-   ```
-
-3. Navigate to your React project's directory and generate your schema.
-
-   Example:
-
-   ```bash
-   cd ../xyflow/examples/react/src/App/
-   ```
-
-   ```bash
-   react-diagram-schema ./
-   ```
-
----
-
-**After Installing Globally,**
-
-run from any directory:
+**Run after local or global installation**:
 
 ```bash
 react-diagram-schema <entryDirectory|entryFile> [rootComponentName]
 ```
 
-Example:
-
-```bash
-react-diagram-schema ./Header.jsx Header
-```
-
 ## Example Output
 
-**Setup**
-
-- Locally installed `react-diagram-schema`
-- The current working directory is `./react-diagram-schema/`.
+The current working directory is `./react-diagram-schema/`
 
 **Command**
 
 - Targeting the sample file App.js (_located in `./sample-components/`_) for component App:
   ```bash
-  react-diagram-schema ./sample-components/ App
+  npx react-diagram-schema ./sample-components/ App
   ```
 
 **Result**  
@@ -318,6 +222,49 @@ The CLI tool accepts two positional arguments:
    in the entry directory.  
    Example: `App` or `Button`
 
+Examples:
+
+1. If the name of the component matches the name of the file,  
+   supplying just the `<entryFile>` or the `<entryDirectory>` + `[rootComponentName]` is sufficient:
+
+- For an App.jsx file, targeting a component App,
+
+  ```bash
+  npx react-diagram-schema ./src/components/App.jsx
+  ```
+
+  ```bash
+  npx react-diagram-schema ./src/components/App/ App
+  ```
+
+2. index.(js/jsx/ts/tsx) files are checked automatically.  
+   Thus, when targeting an index file, `<entryFile>` becomes optional:
+
+- For an index.jsx file, targeting a component Scroll
+  ```bash
+  npx react-diagram-schema ./src/components/ Scroll
+  ```
+  ```bash
+  npx react-diagram-schema ./src/components/index.jsx Scroll
+  ```
+
+3. If the name of the component does not match the name of the file,  
+   you must explicitly supply both `<entryFile>` + `[rootComponentName]`:
+
+- targeting a component Button
+  ```bash
+  npx react-diagram-schema ./src/components/App/App.jsx Button
+  ```
+
+4. If the target component is not supplied, the fallback is  
+   either assuming that the component name matches the file name (i.e. the first example)  
+    or assuming that the target component is default exported:
+
+- targeting a default exported component
+  ```bash
+  npx react-diagram-schema ./src/components/index.jsx
+  ```
+
 ## Flags
 
 **Output File**
@@ -427,6 +374,10 @@ _Look for the file indicated in `<file-path>`_
 
 ## About JSON Schema
 
+The schema is a static architectural model, serialized as JSON, intended for downstream tools.
+
+The schema includes all components discovered during traversal from the chosen entry point, including components that are not directly rendered.
+
 - The schema stores parsed components as objects, parses each component's:
   - name
   - description (the component's purpose, which will be integrated post-MVP using inline comments)
@@ -441,10 +392,16 @@ _Look for the file indicated in `<file-path>`_
 
 ---
 
-- The schema stores the parsed components' **input** data such as:
+- The schema stores the parsed components' **externally defined** data such as:
   - props
   - context dependencies
   - constants (which will be integrated in future releases)
+
+---
+
+- other details:
+  - `nested: true` indicates a component declared inside another component’s scope.
+  - For default-exported components without an explicit name, the schema assigns a name derived from the file name.
 
 ---
 
@@ -453,6 +410,18 @@ The schema
 - describes your app’s structure
 - integrates seamlessly with [react-diagram-visualizer](https://github.com/AmiraBasyouni/react-diagram-visualizer) (a [ReactFlow](https://reactflow.dev/) based tool that renders the schema as an interactive UML-style diagram)
 - can power your custom built tools or workflows (feel free to reuse it however you like)
+
+---
+
+**What you can build with the schema**:
+
+The schema enables custom tooling for various development workflows
+
+- **Visualization tools** - Render component hierarchies, data flow, and relationships (e.g., react-diagram-visualizer)
+- **Architectural analysis** - Verify correctness, detect anti-patterns, measure complexity
+- **Documentation generators** - Auto-generate architecture docs synced with code
+- **Refactoring assistants** - Prototype structural changes and assess impact
+- **Onboarding tools** - Help new developers navigate unfamiliar codebases
 
 ## Dependencies
 
@@ -472,7 +441,7 @@ Please visit [ROADMAP.md](https://github.com/AmiraBasyouni/react-diagram-schema/
 
 ## Contributing
 
-Please visit [CONTRIBUTING.md](https://github.com/AmiraBasyouni/react-diagram-schema/blob/main/CONTRIBUTING.md) to learn about how you can contribute to `react-diagram-schema`.
+For local development or contributing, see [CONTRIBUTING.md](https://github.com/AmiraBasyouni/react-diagram-schema/blob/main/CONTRIBUTING.md).
 
 ## License
 
