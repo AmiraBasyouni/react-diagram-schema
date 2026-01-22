@@ -2,37 +2,58 @@
 
 Thank you for your interest in contributing! We aim to make React component architecture more **visual, structured, and developer-friendly**, and your help can make a big difference.
 
-You do not need to understand everything in this document to get started. Many valuable contributions are small and low-risk, such as:
+Many valuable contributions are small and low-risk, such as:
 
-- fixing typos or clarifying documentation,
-- improving error messages,
-- suggesting test cases,
-- reporting or reproducing edge cases.
+- Fixing typos or clarifying documentation
+- Improving error messages
+- Suggesting test cases
+- Reporting or reproducing edge cases
+
+You do not need to understand everything in this document to get started. 
+
+## Table of Contents
+
+- [Quick Checklist](#quick-checklist)
+- [Get Started](#get-started)
+- [Discussions](#discussions)
+- [Issues](#issues)
+- [Pull Requests](#pull-requests)
+- [Coding Standards](#coding-standards)
+- [Commit Style](#commit-style)
+- [Testing your Changes](#testing-your-changes)
+- [Tips](#tips)
+- [Questions](#questions)
+- [Thank you](#thank-you)
 
 ## Quick Checklist
 
-Feel free to utilize this checklist as a reference. Small improvements, like fixing typos, do not require testing and do not utilize the steps marked as recommended.
+The checklist below acts as a quick reference for the steps you might take on your contributing journey.  
+Small improvements, like fixing typos, do not require testing and do not utilize the steps marked as recommended.
 
+For none-code related contributions (e.g. ideation, plugin ideas)
+- [ ] Open a [discussion](https://github.com/AmiraBasyouni/react-diagram-schema/discussions)
+
+For code contributions (e.g. documentation updates, bug fixes, performance improvements)
+- [ ] Open an [issue](https://github.com/AmiraBasyouni/react-diagram-schema/issues) 
 - [ ] Fork and clone `react-diagram-schema`
 - [ ] (recommended) create a symbolic link for an easier workflow
 - [ ] Branch from main with `git checkout -b your-branch-name`
-- [ ] For code contributions (e.g. bug fixes, performance improvements, documentation updates) open an issue. For none-code related contributions (e.g. ideation, plugin ideas) open a discussion
 - [ ] Run the regression tests `npm run test` to ensure your changes don't break existing behavior
-- [ ] (strongly recommended) Test your changes against a complex repository, such as [xyflow](https://github.com/xyflow/xyflow) or [cal.com](https://github.com/calcom/cal.com)
+- [ ] (recommended) Test your changes against a complex repository, such as [xyflow](https://github.com/xyflow/xyflow) or [cal.com](https://github.com/calcom/cal.com)
 - [ ] (recommended) Visualize the generated schema using [react-diagram-visualizer](https://github.com/AmiraBasyouni/react-diagram-visualizer)
 - [ ] Push your branch and open a pull request on GitHub
+
+Try to avoid:
+
+- Large refactors without discussion.
+- Adding unrelated dependencies.
+
 
 ## Get Started
 
 1. Fork this repository:
 
    On GitHub, [`react-diagram-schema`](https://github.com/AmiraBasyouni/react-diagram-schema), click Fork at the top right of the page.
-
-   <!--- alternatively, if you have gh set up on your terminal, use the following command:
-   ```bash
-   gh repo fork AmiraBasyouni/react-diagram-schema
-   ```
-   --->
 
 2. Clone your fork:
 
@@ -63,26 +84,37 @@ Feel free to utilize this checklist as a reference. Small improvements, like fix
    - To view npm links, run `npm ls -g --depth=0 --link=true`.
    - After testing, you can remove the link by running `npm unlink -g react-diagram-schema`.
 
-## Avoid
+## Discussions
 
-Try to avoid:
+Any ideation (e.g. feature suggestions, plugin ideas) can make a good discussion:
 
-- Large refactors without discussion.
-- Adding unrelated dependencies.
+Visit [Discussions](https://github.com/AmiraBasyouni/react-diagram-schema/discussions)
 
-## Opening An Issue
+**Explore Discussions**
 
-Anything related to modifying the code (e.g. fixing bugs, improving performance) is a good issue:
+On the search bar, you might find `is:open`. These filters are applied automatically. As you manage the filters next to and below the search bar, those values might change.
+
+**Start A Discussion**
+
+1. Click New discussion
+2. Pick a category: (Get Started, How To Contribute, Feature Ideas, Plugin Ideas, or Q&A)
+3. Write a title and a description
+4. Click Start Discussion
+
+## Issues
+
+Anything related to modifying the code (e.g. updating documentation, fixing bugs) is a good issue:
+
+Visit [Issues](https://github.com/AmiraBasyouni/react-diagram-schema/issues)
 
 **Explore Issues**
 
-1. On GitHub, [`react-diagram-schema`](https://github.com/AmiraBasyouni/react-diagram-schema), click on Issues at the top of the page.
-2. On the search bar, you might find `is:issue state:open`. These filters are applied automatically. As you manage the filters underneath the search bar, those values might change.
+On the search bar, you might find `is:issue state:open`. These filters are applied automatically. As you manage the filters underneath the search bar, those values might change.
 
 **Open An Issue**
 
 1. Click New issue
-2. Select a template: (bug report, feature request, or blank issue)
+2. Select a template: (e.g. bug report, feature request, or blank issue)
 3. Modify the title and description
 4. Click Create
 
@@ -90,22 +122,6 @@ Anything related to modifying the code (e.g. fixing bugs, improving performance)
 
 - A good issue contains examples (e.g. before and after, input and output, expected outcome vs reality).
 - Each issue can benefit from a constructive discussion (value assessment, thoughtful resolutions, proactive contributions)
-
-## Opening A Discussion
-
-Anything not related to modifying the code, can make a good discussion:
-
-**Explore Discussions**
-
-1. On GitHub, [`react-diagram-schema`](https://github.com/AmiraBasyouni/react-diagram-schema), click on Discussions at the top of the page.
-2. On the search bar, you might find `is:open`. These filters are applied automatically. As you manage the filters next to and below the search bar, those values might change.
-
-**Start A Discussion**
-
-1. Click New discussion
-2. Pick a category: (Get Started, How To Contribute, Plugin Ideas, Polls, or Q&A)
-3. Write a title and a description
-4. Click Start Discussion
 
 ## Pull Requests
 
@@ -119,18 +135,18 @@ Once we've approved your issue, here are steps you can take towards modifying th
    git checkout -b fix-bug-header
    ```
 
-2. Follow the [Coding Standards](#coding-standards) and [Commit Style](#commit-style) sections for each modification.
+2. Try to follow the [Coding Standards](#coding-standards) and [Commit Style](#commit-style) sections for each modification.
 
-3. Test your changes by following the [Testing your Changes](#testing-your-changes) section.
+3. Try to test your changes by following the [Testing your Changes](#testing-your-changes) section.
 
 4. **Push** your branch and open a pull request on GitHub.
 
-5. If the changes affect the schema structure, explain those changes and why they were important. Even better, produce before and after examples so we can follow along.
+5. If the changes affect the schema structure, explain those changes and why they were important.
 
 ## Coding Standards
 
-- **Formatting**: We use Prettier and ESLint. Run `npm run lint` and `npm run format` before each commit.
-- **File Naming**: use camelCase for utility helpers (e.g., parseCode.js), and kebab-case for core modules (e.g., build-schema.js).
+- **Formatting**: we use Prettier and ESLint. Run `npm run lint` and `npm run format` before each commit.
+- **File Naming**: try to use camelCase for utility helpers (e.g., parseCode.js), and kebab-case for core modules (e.g., build-schema.js).
 
 ## Commit Style
 
@@ -320,23 +336,23 @@ You can visualize `schema.json` using [react-diagram-visualizer](https://github.
    Note  
    :memo: If any modifications are made to the `schema.json` file: close the diagram, stop the visualizer with `Ctrl+c`, then run `npm run dev` again to see the updates in the diagram.
 
-## New to Open Source?
+## Tips
 
-Start with small tasks like improving error messages or fixing typos in docs.
-
-## Roadmap & Features
+**New to Open Source?**
+- Start with small tasks like improving error messages or fixing typos in docs.
 
 To view planned features and priorities, visit the [ROADMAP.md](https://github.com/AmiraBasyouni/react-diagram-schema/blob/main/ROADMAP.md) document.
 
 We welcome discussions of new ideas!  
-If you have a suggestion, feel free to open an issue or comment on an existing one.
+If you have a suggestion, feel free to open a new [discussion](https://github.com/AmiraBasyouni/react-diagram-schema/discussions).
 
-## Questions?
+## Questions
 
-Start a new discussion at [Discussions](https://github.com/AmiraBasyouni/react-diagram-schema/discussions).
+For questions regarding how to contribute:  
+feel free to start a new [discussion](https://github.com/AmiraBasyouni/react-diagram-schema/discussions) with the category "Contributing".
 
-- pick the category "Contribution" for questions regarding how to contribute.
-- pick the category "Q&A" for general inquiries regarding `react-diagram-schema`.
+For general inquiries regarding `react-diagram-schema`:  
+feel free to start a new [discussion](https://github.com/AmiraBasyouni/react-diagram-schema/discussions) with the category "Q&A".
 
 ## Thank you
 
