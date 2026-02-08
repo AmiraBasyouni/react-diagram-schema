@@ -2,6 +2,9 @@
 // Goal: Ensure props, states, context, and functions are accurately extracted from components.
 // Cases Covered: props, state, context
 const parseCode = require("../src/parseCode");
+const parseFile = require("../src/parseFile");
+const verifyReactComponents = require("../src/verifyReactComponents");
+const parseReactComponents = require("../src/parseReactComponents");
 
 describe("Data Extraction", () => {
   test("extracts state variables from a component", () => {
@@ -13,10 +16,14 @@ describe("Data Extraction", () => {
         return <div>{count} {theme}</div>;
       }
     `;
-
+    const topLevelDeclarations = parseFile(code);
+    const verifiedComponents = verifyReactComponents(topLevelDeclarations);
+    const result = parseReactComponents(verifiedComponents, fakePath);
+    const component = result[`StateComponent::${fakePath}`];
+    /*
     const result = parseCode(code, fakePath);
     const component = result[`StateComponent::${fakePath}`];
-
+    */
     expect(component.internal.states).toEqual(
       expect.arrayContaining([
         ["count", "setCount"],
@@ -41,10 +48,18 @@ describe("Data Extraction", () => {
     }
   `;
 
+    const topLevelDeclarations = parseFile(code);
+    const verifiedComponents = verifyReactComponents(topLevelDeclarations);
+    const result = parseReactComponents(verifiedComponents, fakePath);
+    const componentKey = `FunctionExtraction::${fakePath}`;
+    const component = result[componentKey];
+    const internalFunctions = component?.internal?.functions;
+
+    /*
     const result = parseCode(code, fakePath);
     const componentKey = `FunctionExtraction::${fakePath}`;
     const internalFunctions = result[componentKey]?.internal?.functions;
-
+*/
     expect(Object.keys(result)).toContain(componentKey);
     expect(internalFunctions).toContain("handleClick");
     expect(internalFunctions).toContain("handleSubmit");
@@ -58,9 +73,14 @@ describe("Data Extraction", () => {
       }
     `;
 
+    const topLevelDeclarations = parseFile(code);
+    const verifiedComponents = verifyReactComponents(topLevelDeclarations);
+    const result = parseReactComponents(verifiedComponents, fakePath);
+    const component = result[`PropsComponent::${fakePath}`];
+    /*
     const result = parseCode(code, fakePath);
     const component = result[`PropsComponent::${fakePath}`];
-
+*/
     expect(component.external.props).toEqual(
       expect.arrayContaining(["title", "count"]),
     );
