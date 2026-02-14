@@ -20,6 +20,7 @@ function collectTopLevelDeclarations(program_body) {
       switch (bodyPath.node.type) {
         // stores specifiers
         case "ImportDeclaration": {
+          const source = bodyPath.get("source").node.value;
           const specifiers = bodyPath.get("specifiers");
           specifiers.forEach((specifier) => {
             const specifier_type = specifier.node.type;
@@ -28,6 +29,7 @@ function collectTopLevelDeclarations(program_body) {
                 topLevelDeclarations.imports.push({
                   specifier_type,
                   specifier,
+                  source,
                 });
                 break;
               }
@@ -35,6 +37,7 @@ function collectTopLevelDeclarations(program_body) {
                 topLevelDeclarations.imports.push({
                   specifier_type,
                   specifier,
+                  source,
                 });
                 break;
               }
@@ -44,23 +47,30 @@ function collectTopLevelDeclarations(program_body) {
         }
         // stores declarations
         case "ExportNamedDeclaration": {
+          const exportDeclaration = bodyPath.get("declaration");
+          const declaration_type = exportDeclaration.node.type;
           topLevelDeclarations.exports.push({
             export_type: "named",
             declaration: bodyPath.get("declaration"),
+            declaration_type,
           });
           //parseDeclarations(bodyPath.get("declaration"));
           break;
         }
         // stores declarations
         case "ExportDefaultDeclaration": {
+          const exportDeclaration = bodyPath.get("declaration");
+          const declaration_type = exportDeclaration.node.type;
           topLevelDeclarations.exports.push({
             export_type: "default",
+            declaration_type,
             declaration: bodyPath.get("declaration"),
           });
           break;
         }
         // stores declarators
         case "VariableDeclaration": {
+          const declaration_type = "VariableDeclaration";
           const kind = bodyPath.node.kind;
           const declarators = bodyPath.get("declarations");
           switch (kind) {
@@ -79,22 +89,19 @@ function collectTopLevelDeclarations(program_body) {
                       // body_type: BlockStatement, CallExpression, or JSXElement
                       topLevelDeclarations.constants.push({
                         init_type,
-                        body_type: body.get("type"),
+                        body_type: body.node.type,
                         declarator,
+                        declaration_type,
                       });
                       break;
                     }
-                    case "Identifier": {
+                    case "Identifier":
+                    case "CallExpression":
+                    case "JSXElement": {
                       topLevelDeclarations.constants.push({
                         init_type,
                         declarator,
-                      });
-                      break;
-                    }
-                    case "CallExpression": {
-                      topLevelDeclarations.constants.push({
-                        init_type,
-                        declarator,
+                        declaration_type,
                       });
                     }
                   }
@@ -102,6 +109,7 @@ function collectTopLevelDeclarations(program_body) {
                   topLevelDeclarations.regular_constants.push({
                     init_type,
                     declarator,
+                    declaration_type,
                   });
                 }
               });
@@ -111,8 +119,12 @@ function collectTopLevelDeclarations(program_body) {
         }
         // stores function declarations
         case "FunctionDeclaration": {
+          const declaration_type = "FunctionDeclaration";
           if (isFirstLetterCapitalized(bodyPath.get("id").node.name)) {
-            topLevelDeclarations.functions.push({ declaration: bodyPath });
+            topLevelDeclarations.functions.push({
+              declaration: bodyPath,
+              declaration_type,
+            });
           } else {
             topLevelDeclarations.regular_functions.push(bodyPath);
           }
@@ -120,8 +132,12 @@ function collectTopLevelDeclarations(program_body) {
         }
         // stores class declarations
         case "ClassDeclaration": {
+          const declaration_type = "ClassDeclaration";
           if (isFirstLetterCapitalized(bodyPath.get("id").node.name))
-            topLevelDeclarations.classes.push(bodyPath);
+            topLevelDeclarations.classes.push({
+              declaration: bodyPath,
+              declaration_type,
+            });
           break;
         }
         // stores return statements

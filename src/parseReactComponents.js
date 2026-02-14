@@ -1,54 +1,106 @@
 // parseReactComponents.js
 
 const collectTopLevelDeclarations = require("./collectTopLevelDeclarations");
-//const validateReactComponents = require("./validateReactComponents");
+const verifyReactComponents = require("./verifyReactComponents");
 
 // validated components are constants, functions, classes
 function parseReactComponents(validatedComponents, filepath) {
-  const internalDeclarations = {};
+  const internalDeclarations = {
+    constants: [],
+    functions: [],
+    classes: [],
+    exports: [],
+  };
   function extract(validatedComponents = []) {
     return validatedComponents.map(
-      ({ init_type, body_type, declarator, declaration }) => {
+      ({
+        init_type,
+        body_type,
+        declarator,
+        declaration,
+        declaration_type,
+        export_type,
+        verified,
+      }) => {
         const obj = {
           name: "",
           description: "",
           descendants: [],
           internal: { states: [], functions: [] },
           external: { props: [], context: [], constants: [] },
-          defaultExport: false,
+          defaultExport: export_type && export_type === "default",
           location: null,
           unresolvedDescendants: new Set(),
         };
 
-        const componentPath = declarator ? declarator : declaration;
+        const decl = declarator ? declarator : declaration;
 
         //EXTRACT name
-        obj.name = componentPath.node.id ? componentPath.node.id.name : "";
+        obj.name = decl.node.id ? decl.node.id.name : "";
 
         //EXTRACT location
         obj.location = {
-          line: componentPath.node?.loc.start.line,
+          line: decl.node.loc.start.line,
           filepath,
         };
 
-        // correct the scope of componentPath based on init_type and body_type
-        let component_path = componentPath;
-        if (init_type === "ArrowFunctionExpression") {
-          component_path = componentPath.get("init");
+        //let caseNum = 0;
+        // early return in case of
+        if (verified?.includes("is nested in component factory")) {
+          // const Component = memo(OtherComponent)
+          // or export const Component = memo(OtherComponent)
           if (
-            body_type === "CallExpression" &&
-            component_path.node.callee.name === "forwardRef"
+            declaration_type === "VariableDeclaration" &&
+            decl.get("init").node.arguments[0].type === "Identifier"
           ) {
-            component_path = component_path.get("arguments")[0];
+            console.log("case1");
+            return obj;
           }
+          // or export default memo(OtherComponent)
+          if (
+            declaration_type === "CallExpression" &&
+            decl.node.arguments[0].type === "Identifier"
+          ) {
+            console.log("case2");
+            return obj;
+          }
+          // otherwise this is probably a forwardRef( () => {} )
+          console.log("case3");
+          //caseNum = 3;
         }
-        const correctedComponentPath = component_path;
+
+        // correct the scope of componentPath based on init_type
+        function getComponentPath() {
+          if (!init_type) {
+            return declaration;
+          }
+          const init =
+            declaration && export_type === "default"
+              ? declaration
+              : declarator.get("init");
+          if (init_type === "CallExpression") {
+            return init.get("arguments")[0];
+          }
+          return init;
+        }
+        const componentPath = getComponentPath();
 
         //-- IF BLOCK STATEMENT EXISTS (guards against omitted block statement  () =><h1>JSX</h1>) ------------------------
-        if (body_type === "BlockStatement" || declaration) {
-          const blockStatement_body = correctedComponentPath
-            .get("body")
-            .get("body");
+        function declHasBlockStatement() {
+          const body = componentPath.get("body");
+          if (!body) return false;
+          if (!body.node) {
+            // something went wrong
+            console.log(filepath);
+          }
+
+          if (body.node.type === "BlockStatement") return true;
+
+          return false;
+        }
+
+        if (body_type === "BlockStatement" || declHasBlockStatement()) {
+          const blockStatement_body = componentPath.get("body").get("body");
 
           Object.assign(
             internalDeclarations,
@@ -124,21 +176,30 @@ function parseReactComponents(validatedComponents, filepath) {
           });
           obj.external.context = context;
 
-          const component_returnStatement =
-            internalDeclarations.returnStatement[0];
+          const returnStatementPath = internalDeclarations.returnStatement[0];
           //EXTRACT COMPONENT DESCENDANTS
-          extractComponentDescendants(component_returnStatement, obj);
+          extractComponentDescendants({ returnStatementPath, obj });
         } // ---- END OF BLOCK STATEMENT CODE ---------------------------------------------
 
         //EXTRACT non-blockstatement COMPONENT DESCENDANTS (e.g. () => JSX instead of () => {return JSX})
-        if (correctedComponentPath.get("body").isJSXElement()) {
-          extractComponentDescendants(correctedComponentPath, filepath, obj);
+        else {
+          //if (componentPath.get("body").isJSXElement()) {
+          //const init =
+          //  export_type === "default" ? declaration : declarator.get("init");
+          if (!componentPath) {
+            console.log({ init_type });
+            console.log(export_type === "default");
+            console.log(declarator.get("init").node);
+            //console.log(filepath);
+          }
+          const returnStatementPath = componentPath.get("body");
+          extractComponentDescendants({ returnStatementPath, obj });
         }
 
         //EXTRACT externally defined props -> ["propA", "propB", "propC", ...]
         // if component contains parameters, parse them
-        if (correctedComponentPath.node.params?.length > 0) {
-          const componentParamsArray = correctedComponentPath.get("params");
+        if (componentPath.node.params?.length > 0) {
+          const componentParamsArray = componentPath.get("params");
           // for each parameter
           componentParamsArray.forEach((param) => {
             // if the parameter is an object { }
@@ -164,28 +225,37 @@ function parseReactComponents(validatedComponents, filepath) {
     );
   }
   const metadata = extract(validatedComponents);
-  const nestedFunctionDefinedComponentsMetadata = extract(
+  const nestedDeclarations = extract(
+    verifyReactComponents(internalDeclarations),
+  );
+  const nestedDeclarationsMetadata = nestedDeclarations.map(
+    (nestedDecl) => (nestedDecl.nested = true),
+  );
+  /*const nestedFunctionDefinedComponentsMetadata = extract(
     internalDeclarations.functions,
   );
   const nestedInlineComponentsMetadata = extract(
     internalDeclarations.constants,
   );
-  const nestedInlineVariablesMetadata = extract(
-    internalDeclarations.regular_constants,
-  );
+  //const nestedInlineVariablesMetadata = extract(
+  //  internalDeclarations.regular_constants,
+  //);
   nestedFunctionDefinedComponentsMetadata.map(
     (nestedComponent) => (nestedComponent.nested = true),
   );
   nestedInlineComponentsMetadata.map(
     (nestedComponent) => (nestedComponent.nested = true),
   );
-  nestedInlineVariablesMetadata.map(
-    (nestedVariable) => (nestedVariable.nested = true),
-  );
+  
+  //nestedInlineVariablesMetadata.map(
+  //  (nestedVariable) => (nestedVariable.nested = true),
+  //);
 
   //metadata.push(...nestedFunctionDefinedComponentsMetadata);
   //metadata.push(...nestedInlineComponentsMetadata);
   //metadata.push(...nestedInlineVariablesMetadata);
+	*/
+  metadata.push(...nestedDeclarationsMetadata);
 
   const components = {};
   metadata.forEach(
@@ -197,12 +267,12 @@ function parseReactComponents(validatedComponents, filepath) {
   return components;
 }
 
-function extractComponentDescendants(returnStatementPath, obj) {
+function extractComponentDescendants({ returnStatementPath, obj }) {
   //EXTRACT component descendants
   const descendantsMap = new Map();
-  (returnStatementPath?.traverse({
-    JSXElement(childPath) {
-      const opening = childPath.node.openingElement;
+  (returnStatementPath.traverse({
+    JSXElement(elementPath) {
+      const opening = elementPath.node.openingElement;
 
       // Handle <SomeComponent>
       let tagName = "";
