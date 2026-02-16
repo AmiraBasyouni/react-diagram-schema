@@ -1,9 +1,8 @@
 // verifyReactComponents.test.js
 // Goal: check that Components are correctly validated
-// Cases Covered: returns JSXElement, nested in component factory, class extends React.Component
+// Cases Covered: returns JSXElement, contains a hook, nested in component factory, class extends React.Component
 const verifyReactComponents = require("../src/verifyReactComponents");
 const parseFile = require("../src/parseFile");
-
 describe("verify react components", () => {
   // indicator 1
   describe("returns JSXElement", () => {
@@ -39,15 +38,23 @@ describe("verify react components", () => {
         );
       });
     });
-    // functions
-    test("function with block statement", () => {
-      const code = `function Component() { return <div></div> }`;
-      const topLevelDeclarations = parseFile(code);
-      const verifiedComponents = verifyReactComponents(topLevelDeclarations);
-      expect(verifiedComponents[0].verified).toContain("returns JSXElement");
-      expect(verifiedComponents[0].declaration_type).toEqual(
-        "FunctionDeclaration",
-      );
+    describe("funcitons", () => {
+      // functions
+      test("{ return <JSX /> }", () => {
+        const code = `function Component() { return <div></div> }`;
+        const topLevelDeclarations = parseFile(code);
+        const verifiedComponents = verifyReactComponents(topLevelDeclarations);
+        expect(verifiedComponents[0].verified).toContain("returns JSXElement");
+        expect(verifiedComponents[0].declaration_type).toEqual(
+          "FunctionDeclaration",
+        );
+      });
+      test("{ if(condition) { return <JSX/> } }", () => {
+        const code = `function Component() { if(conditionIsTrue) { return <JSX/> } return null; }`;
+        const topLevelDeclarations = parseFile(code);
+        const verifiedComponents = verifyReactComponents(topLevelDeclarations);
+        expect(verifiedComponents[0].verified).toContain("returns JSXElement");
+      });
     });
     // exports
     describe("exports", () => {
@@ -197,5 +204,63 @@ describe("verify react components", () => {
         "ClassDeclaration",
       );
     });
+  });
+  // indicator 4
+  describe("containsHook", () => {
+    // constants
+    test("arrow function, with block statement", () => {
+      const code = `const Component = () => { 
+	        const [count, setCount] = useState(0);
+		return <div></div> 
+	}`;
+      const topLevelDeclarations = parseFile(code);
+      const verifiedComponents = verifyReactComponents(topLevelDeclarations);
+      expect(verifiedComponents[0].verified).toContain("contains a hook");
+    });
+    // functions
+    test("function with block statement", () => {
+      const code = `function Component() { 
+	        const [count, setCount] = React.useState(0);
+		return <div></div> 
+	}`;
+      const topLevelDeclarations = parseFile(code);
+      const verifiedComponents = verifyReactComponents(topLevelDeclarations);
+      expect(verifiedComponents[0].verified).toContain("contains a hook");
+    });
+    // exports
+    describe("exports", () => {
+      test("export default arrow function with blockStatement", () => {
+        const code = `export default () => {
+	        const [count, setCount] = React.useState(0);
+		return <JSX /> 
+	}`;
+        const topLevelDeclarations = parseFile(code);
+        const verifiedComponents = verifyReactComponents(topLevelDeclarations);
+        expect(verifiedComponents[0].verified).toContain("contains a hook");
+      });
+      test("export default function", () => {
+        const code = `export default function(){
+	        const [count, setCount] = useState(0);
+		return <div></div> 
+	}`;
+        const topLevelDeclarations = parseFile(code);
+        const verifiedComponents = verifyReactComponents(topLevelDeclarations);
+        expect(verifiedComponents[0].verified).toContain("contains a hook");
+      });
+    });
+  });
+});
+describe("export_types", () => {
+  test("named constant", () => {
+    const code = `export const ComponentName = () => <JSX />`;
+    const topLevelDeclarations = parseFile(code);
+    const verifiedComponents = verifyReactComponents(topLevelDeclarations);
+    expect(verifiedComponents[0].export_type).toBe("named");
+  });
+  test("named function", () => {
+    const code = `export function ComponentName(){ return <JSX /> }`;
+    const topLevelDeclarations = parseFile(code);
+    const verifiedComponents = verifyReactComponents(topLevelDeclarations);
+    expect(verifiedComponents[0].export_type).toBe("named");
   });
 });
