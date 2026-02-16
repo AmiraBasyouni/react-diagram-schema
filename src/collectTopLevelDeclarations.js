@@ -48,6 +48,8 @@ function collectTopLevelDeclarations(program_body) {
         // stores declarations
         case "ExportNamedDeclaration": {
           const exportDeclaration = bodyPath.get("declaration");
+          // if (declaration: null) then skip this pass
+          if (!exportDeclaration.node) break;
           const declaration_type = exportDeclaration.node.type;
           topLevelDeclarations.exports.push({
             export_type: "named",

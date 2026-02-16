@@ -2,7 +2,8 @@
 
 // imports
 const path = require("path");
-const parseCode = require("./parseCode");
+const parseFile = require("./parseFile");
+const getSchema = require("./getSchema");
 const resolveFilePath = require("./resolveFilePath");
 const readSourceFile = require("./readSourceFile");
 const parseImport = require("./parseImport");
@@ -24,6 +25,7 @@ const importResolutions = new Map();
 const stack = [];
 const importedNames = [];
 const node_modules = [];
+const unresolvedComponents = [];
 
 // build_schema
 // 1. accepts <entryDirectory|entryFile> and [rootComponentName] and verbosity levels
@@ -102,16 +104,16 @@ function build_schema(entryPoint, rootComponentName, verbosity = {}) {
     if (filesVisited.has(relativeFilePath)) {
       continue;
     }
-    // otherwise, mark this file as visited
+    // otherwise, mark this file as visited before proceeding
     filesVisited.set(relativeFilePath, true);
 
     // retrieve the file's code as a string
     const code = readSourceFile(relativeFilePath);
 
     // GENERATE SCHEMA
-    // retrieve the generated schema of this file
-    const schema = parseCode(code, relativeFilePath);
-    // Guard Clause: on parseCode() failure, log a warning and skip the current file
+    const parsedFile = parseFile(code);
+    const schema = getSchema(parsedFile, relativeFilePath);
+    // Guard Clause: on getSchema() failure, log a warning and skip the current file
     if (!schema) {
       if (verbosity.verbose) {
         log(
@@ -120,6 +122,13 @@ function build_schema(entryPoint, rootComponentName, verbosity = {}) {
         );
       }
       continue;
+    }
+    if (componentName && !schema[`${componentName}::${relativeFilePath}`]) {
+      //console.log(`Could not find ${componentName} at ${relativeFilePath}`);
+      unresolvedComponents.push({
+        componentName,
+        ID: `${componentName}::${relativeFilePath}`,
+      });
     }
 
     // account for when multiple components are defined in the same file
@@ -160,13 +169,17 @@ function build_schema(entryPoint, rootComponentName, verbosity = {}) {
         // otherwise,
         // collect the descendant's import path
         // and importedName i.e. ComponentA as A if relevant
-        const { importSource: descendantImportPath, importedName } =
-          parseImport(code, unresolvedDescendant);
+        const {
+          importSource: descendantImportPath,
+          localName,
+          importedName,
+        } = parseImport(parsedFile.imports, unresolvedDescendant);
+        const importName = importedName ? importedName : localName;
         // remember imported Names when relevant, to resolve them later
-        if (importedName && unresolvedDescendant !== importedName) {
+        if (importName && unresolvedDescendant !== importName) {
           importedNames.push({
-            importedName,
-            filepath: `${descendantImportPath}::${importedName}`,
+            importName,
+            filepath: `${descendantImportPath}::${importName}`,
             unresolvedDescendant,
           });
         }
@@ -184,16 +197,16 @@ function build_schema(entryPoint, rootComponentName, verbosity = {}) {
           // then resolve it as an absolute file path
           // case 1) import {ComponentA as A} where A is recorded
           if (
-            importedName &&
-            unresolvedDescendant !== importedName &&
-            importResolutions.has(`${descendantImportPath}::${importedName}`)
+            importName &&
+            unresolvedDescendant !== importName &&
+            importResolutions.has(`${descendantImportPath}::${importName}`)
           ) {
             // When importedName is relevant,
             // AND NOT {ComponentA} (in {ComponentA}, unresolvedDescendant = importedName)
             // AND we've resolved this import path before
             // Derive the resolution from our list of resolutions
             const resolvedImport_AbsoluteFilePath = importResolutions.get(
-              `${descendantImportPath}::${importedName}`,
+              `${descendantImportPath}::${importName}`,
             );
             // Then record ComponentA's resolution path
             // (thus mapping the resolution of A to be the same as resolution of ComponentA)
@@ -236,7 +249,7 @@ function build_schema(entryPoint, rootComponentName, verbosity = {}) {
           resolvedImport_RelativeFilePath.includes("node_modules")
         ) {
           // Guard Clause: if the import statement of this descendant leads to a node_modules file
-          // BREAKING CHANGE, file path will be set to descendantImportPath
+          // file path will be set to descendantImportPath
           // e.g. TooltipPrimitive::@radix-ui/react-tooltip
           component.descendants?.set(unresolvedDescendant, {
             location: { filepath: descendantImportPath },
@@ -248,8 +261,16 @@ function build_schema(entryPoint, rootComponentName, verbosity = {}) {
           component.descendants?.set(unresolvedDescendant, {
             location: { filepath: resolvedImport_RelativeFilePath },
           });
+          // if file has already been visited,
+          if (filesVisited.get(resolvedImport_RelativeFilePath)) {
+            // resolve remaining unresolved descendants
+            unresolvedComponents.push({
+              componentName: unresolvedDescendant,
+              ID: `${unresolvedDescendant}::${resolvedImport_RelativeFilePath}`,
+            });
+          }
 
-          // if import path is valid and file has not been resolved before,
+          // if import path is valid and file has not been visited yet,
           if (
             resolvedImport_RelativeFilePath &&
             !filesVisited.get(resolvedImport_RelativeFilePath)
@@ -262,29 +283,27 @@ function build_schema(entryPoint, rootComponentName, verbosity = {}) {
             }
             stack.push({
               entryPoint: resolvedImport_RelativeFilePath,
-              componentName: importedName ? importedName : unresolvedDescendant,
+              componentName: importName ? importName : unresolvedDescendant,
             });
           }
         }
       });
       // clear and hide unresolvedDescendants from JSON file output
       component.unresolvedDescendants = undefined;
-      if (!component.provider) {
-        // transform component descendants from type Map to type Array
-        component.descendants = Array.from(component.descendants.entries()).map(
-          ([name, metadata]) => `${name}::${metadata.location.filepath}`,
-        );
-      }
+      // transform component descendants from type Map to type Array
+      component.descendants = Array.from(component.descendants.entries()).map(
+        ([name, metadata]) => `${name}::${metadata.location.filepath}`,
+      );
     });
   }
 
   // Lastly, create a duplicate component for each importedName
   // e.g. in the case of {ComponentA as A}, create A such that A = ComponentA
-  importedNames.forEach(({ importedName, filepath, unresolvedDescendant }) => {
+  importedNames.forEach(({ importName, filepath, unresolvedDescendant }) => {
     const filepathResolution = importResolutions.get(filepath);
     const relativeResolution = getRelativeFromAbsolutePath(filepathResolution);
     components[`${unresolvedDescendant}::${relativeResolution}`] =
-      components[`${importedName}::${relativeResolution}`];
+      components[`${importName}::${relativeResolution}`];
   });
 
   // And, create a component for each node_modules file
@@ -309,6 +328,25 @@ function build_schema(entryPoint, rootComponentName, verbosity = {}) {
         filepath: descendantImportPath,
       },
     };
+  });
+
+  // And ammend unresolved components
+  unresolvedComponents.forEach(({ componentName, ID }) => {
+    if (!components[ID]) {
+      const obj = {
+        name: `${componentName}`,
+        description: "",
+        descendants: [],
+        internal: { states: [], functions: [] },
+        external: { props: [], context: [], constants: [] },
+        defaultExport: undefined,
+        location: null,
+        unresolvedDescendants: undefined,
+        unresolved: true,
+      };
+      components[ID] = obj;
+      //console.log(`appended ${componentName} to schema as ${ID}`);
+    }
   });
 
   // END TIMER

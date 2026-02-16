@@ -1,18 +1,18 @@
 // verifyReactComponents.js
 // goals:
 // - indicator 1: a component must start with a capital letter (verified in parseFile())
-// - indicator 2: a component must either return JSX, be nested in a component factory, or come as class extends React
+// - indicator 2: a component must either return JSX, contain a hook, be nested in a component factory, or come as class extends React
 // - test refactor on the html-input repo
 // - achieve:
 //   --> better code readability,
 //   --> don't consider `const anArray = []` as a component,
 //   --> continue to consider `const Component = as`
 
-//const traverse = require("@babel/traverse").default;
 const parseDeclarations = require("./collectTopLevelDeclarations");
 
 function verifyReactComponents(topLevelDeclarations) {
-  // indicator 2: is at least one of these true? returnsJSXElement || isNestedInComponentFactory || isClassExtendsReact
+  // indicator 2: is at least one of these true?
+  // returnsJSXElement || isNestedInComponentFactory || isClassExtendsReact || containsHook
   const verified = verify(topLevelDeclarations);
 
   const verifiedComponents = [
@@ -28,7 +28,8 @@ function verifyReactComponents(topLevelDeclarations) {
   const isReactComponent = (path) =>
   returnsJSXElement(path) ||
   isNestedInComponentFactory(path) ||
-  isClassExtendsReact(path);
+  isClassExtendsReact(path) || 
+  containsHook(path);
 */
 
 function verify({
@@ -43,12 +44,20 @@ function verify({
   const exports = [];
 
   tentativeConstants.map(
-    ({ init_type, body_type, declarator, declaration_type, verified = [] }) => {
+    ({
+      export_type,
+      init_type,
+      body_type,
+      declarator,
+      declaration_type,
+      verified = new Set(),
+    }) => {
       switch (init_type) {
         case "ArrowFunctionExpression": {
           // case: const Component = () => <div></div>;
           // case: const Component = () => { return <div></div> }
           const returnsJSX = returnsJSXElement({
+            export_type,
             init_type,
             body_type,
             declarator,
@@ -63,6 +72,7 @@ function verify({
         // case: const Component = memo(() => {}) or forwardref(() => {})
         case "CallExpression": {
           const declaratorInComponentFactory = isNestedInComponentFactory({
+            export_type,
             init_type,
             declarator,
             declaration_type,
@@ -75,8 +85,9 @@ function verify({
         }
         // case: const Component = <div></div>
         case "JSXElement": {
-          verified.push("returns JSXElement");
+          verified.add("returns JSXElement");
           constants.push({
+            export_type,
             declaration_type,
             init_type,
             declarator,
@@ -92,20 +103,23 @@ function verify({
     },
   );
 
-  tentativeFunctions.map(({ declaration, declaration_type, verified = [] }) => {
-    // case: function Component() { return <div></div> }
-    const returnsJSX = returnsJSXElement({
-      declaration,
-      declaration_type,
-      verified,
-    });
-    if (returnsJSX) {
-      functions.push(returnsJSX);
-    }
-  });
+  tentativeFunctions.map(
+    ({ export_type, declaration, declaration_type, verified = new Set() }) => {
+      // case: function Component() { return <div></div> }
+      const returnsJSX = returnsJSXElement({
+        export_type,
+        declaration,
+        declaration_type,
+        verified,
+      });
+      if (returnsJSX) {
+        functions.push(returnsJSX);
+      }
+    },
+  );
 
   tentativeExports.map(
-    ({ declaration, export_type, declaration_type, verified = [] }) => {
+    ({ export_type, declaration, declaration_type, verified = new Set() }) => {
       switch (export_type) {
         case "default": {
           switch (declaration_type) {
@@ -183,21 +197,21 @@ function verify({
                   declaration,
                   declaration_type,
                 });
-                functions.forEach((func) => {
-                  exports.push({
-                    ...func,
-                    export_type,
-                    declaration,
-                    declaration_type,
-                  });
+              });
+              functions.forEach((func) => {
+                exports.push({
+                  ...func,
+                  export_type,
+                  declaration,
+                  declaration_type,
                 });
-                classes.forEach((clas) => {
-                  exports.push({
-                    ...clas,
-                    export_type,
-                    declaration,
-                    declaration_type,
-                  });
+              });
+              classes.forEach((clas) => {
+                exports.push({
+                  ...clas,
+                  export_type,
+                  declaration,
+                  declaration_type,
                 });
               });
             }
@@ -218,6 +232,38 @@ function verify({
   return { constants, functions, classes, exports };
 }
 
+function containsHook(item) {
+  let foundHook = false;
+  item.traverse({
+    // see if you can spot a Hook called within this item
+    CallExpression(path) {
+      const callee = path.get("callee");
+      const callee_type = callee.node.type;
+      switch (callee_type) {
+        case "MemberExpression": {
+          if (callee.node.object.name === "React") {
+            foundHook = true;
+          }
+          break;
+        }
+        case "Identifier": {
+          const callee_name = callee.node.name;
+          switch (callee_name) {
+            case "useEffect":
+            case "useState":
+            case "useReducer": {
+              foundHook = true;
+            }
+          }
+          break;
+        }
+      }
+    },
+  });
+
+  return foundHook;
+}
+
 function returnsJSXElement(input) {
   const isExportDeclaration = Boolean(input.export_type);
   const declaration_type = input.declaration_type;
@@ -225,63 +271,99 @@ function returnsJSXElement(input) {
     case "ArrowFunctionExpression":
     case "VariableDeclaration": {
       const {
+        export_type,
         init_type,
         body_type,
         declarator,
         declaration,
-        export_type,
         declaration_type,
-        verified = [],
+        verified = new Set(),
       } = input;
       switch (init_type) {
         case "ArrowFunctionExpression": {
           switch (body_type) {
             // case: const Component = () => <div></div>;
             case "JSXElement": {
-              verified.push("returns JSXElement");
+              verified.add("returns JSXElement");
               return {
+                export_type,
                 init_type,
                 body_type,
                 declarator,
                 declaration,
-                export_type,
                 declaration_type,
                 verified,
               };
             }
             // case: const Component = () => { return <div></div> }
             case "BlockStatement": {
-              const blockStatement_body = //getBody(isExportDeclaration);
-                isExportDeclaration
-                  ? input.declaration.get("body").get("body")
-                  : declarator.get("init").get("body").get("body");
-              // iterate through the block statement body's content to find the return statements
+              const blockStatement_body = isExportDeclaration
+                ? input.declaration.get("body").get("body")
+                : declarator.get("init").get("body").get("body");
+
+              const decl = isExportDeclaration ? input.declaration : declarator;
+              let returnsJSX = false;
+              decl.traverse({
+                // do not enter nested functions
+                Function(path) {
+                  if (path !== decl) {
+                    return;
+                  }
+                },
+                ReturnStatement(path) {
+                  const arg = path.get("argument");
+                  if (!arg) return;
+                  // see if you can spot a JSXElement in the return statement
+                  // if so, this constant declarator/declaration returns a JSXElement
+                  if (arg.type === "JSXElement" || arg.type === "JSXFragment") {
+                    returnsJSX = true;
+                    return;
+                  }
+                  arg.traverse({
+                    JSXElement() {
+                      returnsJSX = true;
+                      return;
+                    },
+                    JSXFragment() {
+                      returnsJSX = true;
+                      return;
+                    },
+                    Function(inner) {
+                      inner.skip();
+                    },
+                  });
+                },
+              });
+              if (returnsJSX) {
+                verified.add("returns JSXElement");
+              }
+
+              // iterate through the block statement body's content to find hooks
               for (const item of blockStatement_body) {
-                let isVerified = false;
-                //blockStatement_body.forEach((item) => {
-                if (item.node.type === "ReturnStatement") {
+                /*if (item.node.type === "ReturnStatement") {
                   item.traverse({
                     // see if you can spot a JSXElement in the return statement
                     JSXElement() {
-                      // if so, we've verified, this constant declarator returns a JSXElement
-                      isVerified = true;
+                      // then this constant declarator/declaration returns a JSXElement
+                      returnsJSX = true;
                     },
                   });
-                  if (isVerified) {
-                    verified.push("returns JSXElement");
-                    return {
-                      init_type,
-                      body_type,
-                      declarator,
-                      declaration,
-                      export_type,
-                      declaration_type,
-                      verified,
-                    };
-                  }
+                }*/
+                if (containsHook(item)) {
+                  verified.add("contains a hook");
+                }
+                if (verified.size > 0) {
+                  return {
+                    export_type,
+                    init_type,
+                    body_type,
+                    declarator,
+                    declaration,
+                    declaration_type,
+                    verified,
+                  };
                 }
               }
-              //});
               return undefined;
             }
           } // End of switch(body_type)
@@ -289,8 +371,9 @@ function returnsJSXElement(input) {
         } // End of ArrowFunctionExpression
         // case: const Component = <div></div>
         case "JSXElement": {
-          verified.push("returns JSXElement");
+          verified.add("returns JSXElement");
           return {
+            export_type,
             init_type,
             declarator,
             declaration_type,
@@ -301,30 +384,82 @@ function returnsJSXElement(input) {
       break;
     }
     case "FunctionDeclaration": {
-      const { declaration, declaration_type, verified = [] } = input;
+      const {
+        export_type,
+        declaration,
+        declaration_type,
+        verified = new Set(),
+      } = input;
       // case: function Component() { return <div></div> }
+      let returnsJSX = false;
+      declaration.traverse({
+        // do not enter nested functions
+        Function(path) {
+          if (path !== declaration) {
+            return;
+          }
+        },
+        ReturnStatement(path) {
+          const arg = path.get("argument");
+          if (!arg) return;
+          // see if you can spot a JSXElement in the return statement
+          // if so, this constant declarator/declaration returns a JSXElement
+          if (arg.type === "JSXElement" || arg.type === "JSXFragment") {
+            returnsJSX = true;
+            return;
+          }
+          arg.traverse({
+            JSXElement() {
+              returnsJSX = true;
+              return;
+            },
+            JSXFragment() {
+              returnsJSX = true;
+              return;
+            },
+            Function(inner) {
+              inner.skip();
+            },
+          });
+        },
+      });
+      if (returnsJSX) {
+        verified.add("returns JSXElement");
+      }
+
+      // iterate through the block statement body's content to find hooks
       const blockStatement_body = declaration.get("body").get("body");
       for (const item of blockStatement_body) {
-        //blockStatement_body.forEach((item) => {
-        let isVerified = false;
+        if (containsHook(item)) {
+          verified.add("contains a hook");
+        }
+        /*
+      for (const item of blockStatement_body) {
+        let returnsJSX = false;
         if (item.node.type === "ReturnStatement") {
           item.traverse({
             // see if you can spot a JSXElement in the return statement
             JSXElement() {
               // if so, we've verified, this constant declarator returns a JSXElement
-              isVerified = true;
+              returnsJSX = true;
             },
           });
-          if (isVerified) {
-            verified.push("returns JSXElement");
-            return {
-              declaration,
-              declaration_type,
-              verified,
-            };
-          }
         }
-        //});
+        if (containsHook(item)) {
+          verified.push("contains a hook");
+        }
+        if (returnsJSX) {
+          verified.push("returns JSXElement");
+        }*/
+        if (verified.size > 0) {
+          verified.add("returns JSXElement");
+          return {
+            export_type,
+            declaration,
+            declaration_type,
+            verified,
+          };
+        }
       }
       return undefined;
     }
@@ -332,11 +467,12 @@ function returnsJSXElement(input) {
 }
 
 function isNestedInComponentFactory({
+  export_type,
   init_type,
   declaration_type,
   declarator,
   declaration,
-  verified = [],
+  verified = new Set(),
 }) {
   // cases:
   // constant (declarator) --> const Component = memo(() => {}) or forwardref(ComponentName)
@@ -344,8 +480,9 @@ function isNestedInComponentFactory({
   const callExpression = declarator ? declarator.get("init") : declaration;
   const calleeName = callExpression.get("callee").node.name;
   if (calleeName === "memo" || calleeName === "forwardRef") {
-    verified.push("is nested in component factory");
+    verified.add("is nested in component factory");
     return {
+      export_type,
       declaration_type,
       init_type,
       declarator,
@@ -356,7 +493,12 @@ function isNestedInComponentFactory({
   return undefined;
 }
 
-function isClassExtendsReact({ declaration, declaration_type, verified = [] }) {
+function isClassExtendsReact({
+  export_type,
+  declaration,
+  declaration_type,
+  verified = new Set(),
+}) {
   const superClass = declaration.get("superClass");
   switch (superClass.node.type) {
     case "Identifier": {
@@ -366,8 +508,8 @@ function isClassExtendsReact({ declaration, declaration_type, verified = [] }) {
         superClassName === "Component" ||
         superClassName === "PureComponent"
       ) {
-        verified.push("class extends react");
-        return { declaration, declaration_type, verified };
+        verified.add("class extends react");
+        return { export_type, declaration, declaration_type, verified };
       }
       break;
     }
@@ -380,8 +522,8 @@ function isClassExtendsReact({ declaration, declaration_type, verified = [] }) {
         (superClassPropertyName === "Component" ||
           superClassPropertyName === "PureComponent")
       ) {
-        verified.push("class extends react");
-        return { declaration, declaration_type, verified };
+        verified.add("class extends react");
+        return { export_type, declaration, declaration_type, verified };
       }
       break;
     }
