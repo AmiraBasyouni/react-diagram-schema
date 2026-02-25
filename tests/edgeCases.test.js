@@ -1,8 +1,20 @@
 // edgeCases.test.js
 // Goal: Handle tricky structures like nested components, default exports, and files with missing metadata.
-const parseCode = require("../src/parseCode");
+const parseFile = require("../src/parseFile");
+const verifyReactComponents = require("../src/verifyReactComponents");
+const parseReactComponents = require("../src/parseReactComponents");
 
 describe("Edge Cases", () => {
+  test("Extract Component nested in component factory", () => {
+    const fakePath = "../fake/Component.js";
+    const code = `const Component = memo(NestedComponent)`;
+    const topLevelDeclarations = parseFile(code);
+    const verifiedComponents = verifyReactComponents(topLevelDeclarations);
+    const result = parseReactComponents(verifiedComponents, fakePath);
+    const component = result[`Component::${fakePath}`];
+    expect(component.name).toEqual("Component");
+  });
+
   test("component with no state variables", () => {
     const fakePath = "../fake/NoState.js";
     const code = `
@@ -11,7 +23,9 @@ describe("Edge Cases", () => {
       }
     `;
 
-    const result = parseCode(code, fakePath);
+    const topLevelDeclarations = parseFile(code);
+    const verifiedComponents = verifyReactComponents(topLevelDeclarations);
+    const result = parseReactComponents(verifiedComponents, fakePath);
     const component = result[`NoState::${fakePath}`];
 
     expect(component.internal.states).toEqual([]);
@@ -26,7 +40,9 @@ describe("Edge Cases", () => {
     }
   `;
 
-    const result = parseCode(code, fakePath);
+    const topLevelDeclarations = parseFile(code);
+    const verifiedComponents = verifyReactComponents(topLevelDeclarations);
+    const result = parseReactComponents(verifiedComponents, fakePath);
 
     const internalFunctions =
       result[`NoFunctionsComponent::${fakePath}`].internal.functions;
@@ -41,7 +57,9 @@ describe("Edge Cases", () => {
       }
     `;
 
-    const result = parseCode(code, fakePath);
+    const topLevelDeclarations = parseFile(code);
+    const verifiedComponents = verifyReactComponents(topLevelDeclarations);
+    const result = parseReactComponents(verifiedComponents, fakePath);
     const component = result[`NoProps::${fakePath}`];
 
     expect(component.external.props).toEqual([]);
@@ -55,7 +73,9 @@ describe("Edge Cases", () => {
       }
     `;
 
-    const result = parseCode(code, fakePath);
+    const topLevelDeclarations = parseFile(code);
+    const verifiedComponents = verifyReactComponents(topLevelDeclarations);
+    const result = parseReactComponents(verifiedComponents, fakePath);
     const component = result[`NoContext::${fakePath}`];
 
     expect(component.external.context).toEqual([]);
@@ -69,7 +89,9 @@ describe("Edge Cases", () => {
       }
     `;
 
-    const result = parseCode(code, fakePath);
+    const topLevelDeclarations = parseFile(code);
+    const verifiedComponents = verifyReactComponents(topLevelDeclarations);
+    const result = parseReactComponents(verifiedComponents, fakePath);
     const component = result[`NoConstants::${fakePath}`];
 
     expect(component.external.constants).toEqual([]);
@@ -84,7 +106,9 @@ describe("Edge Cases", () => {
     }
   `;
 
-    const result = parseCode(code, fakePath);
+    const topLevelDeclarations = parseFile(code);
+    const verifiedComponents = verifyReactComponents(topLevelDeclarations);
+    const result = parseReactComponents(verifiedComponents, fakePath);
 
     // Assert both top-level components are detected
     expect(Object.keys(result)).toContain(`NestedStructure::${fakePath}`);
@@ -111,7 +135,9 @@ describe("Edge Cases", () => {
     }
   `;
 
-    const result = parseCode(code, fakePath);
+    const topLevelDeclarations = parseFile(code);
+    const verifiedComponents = verifyReactComponents(topLevelDeclarations);
+    const result = parseReactComponents(verifiedComponents, fakePath);
 
     // Assert both components are detected
     expect(Object.keys(result)).toContain(`ParentComponent::${fakePath}`);
@@ -141,7 +167,9 @@ describe("Exports", () => {
       }
     `;
 
-    const result = parseCode(code, fakePath);
+    const topLevelDeclarations = parseFile(code);
+    const verifiedComponents = verifyReactComponents(topLevelDeclarations);
+    const result = parseReactComponents(verifiedComponents, fakePath);
 
     expect(Object.keys(result)).toContain(
       `DefaultExportStructure::${fakePath}`,
@@ -156,7 +184,9 @@ describe("Exports", () => {
       }
     `;
 
-    const result = parseCode(code, fakePath);
+    const topLevelDeclarations = parseFile(code);
+    const verifiedComponents = verifyReactComponents(topLevelDeclarations);
+    const result = parseReactComponents(verifiedComponents, fakePath);
 
     expect(Object.keys(result)).toContain(`ExportStructure::${fakePath}`);
   });
@@ -169,7 +199,9 @@ describe("Exports", () => {
       }
     `;
 
-    const result = parseCode(code, fakePath);
+    const topLevelDeclarations = parseFile(code);
+    const verifiedComponents = verifyReactComponents(topLevelDeclarations);
+    const result = parseReactComponents(verifiedComponents, fakePath);
 
     expect(Object.keys(result)).toContain(`NamedExportInline::${fakePath}`);
   });
@@ -180,7 +212,9 @@ describe("Exports", () => {
     export default () => <div>Anonymous inline default export</div>;
   `;
 
-    const result = parseCode(code, fakePath);
+    const topLevelDeclarations = parseFile(code);
+    const verifiedComponents = verifyReactComponents(topLevelDeclarations);
+    const result = parseReactComponents(verifiedComponents, fakePath);
 
     // Assert component key exists
     expect(Object.keys(result)).toContain(`::${fakePath}`);
@@ -194,7 +228,9 @@ describe("Exports", () => {
     }
   `;
 
-    const result = parseCode(code, fakePath);
+    const topLevelDeclarations = parseFile(code);
+    const verifiedComponents = verifyReactComponents(topLevelDeclarations);
+    const result = parseReactComponents(verifiedComponents, fakePath);
 
     // Assert component key exists
     expect(Object.keys(result)).toContain(`::${fakePath}`);

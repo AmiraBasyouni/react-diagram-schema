@@ -1,16 +1,18 @@
-/* (resolveFilePath) objective: find the file containing the declaration of a given component, the way a bundler does it */
+// resolveFilePath.js
+// objective: find the file containing the declaration of a given component, the way a bundler does it */
 
-/* imports */
+// imports
 const path = require("path");
 const fs = require("fs");
+const parseFile = require("./parseFile");
 const componentIsDeclaredInCode = require("./utils/componentIsDeclaredInCode");
 const { isFile, pathExists } = require("./utils/isFile");
 
 function resolveFilePath(entryPoint, componentName) {
-  /* store user's current working directory */
+  // store user's current working directory
   const projectRootDir = process.cwd();
 
-  /* normalize the import path */
+  // normalize the import path
   //const absolutePath = path.resolve(entryPoint, importPath);
 
   // if entryPoint leads directly to a valid file path,
@@ -46,21 +48,28 @@ function resolveFilePath(entryPoint, componentName) {
   ].forEach((path) => candidateFiles.push(path));
 
   for (const filePath of candidateFiles) {
-    /* if the filePath exists, */
+    // if the filePath exists,
     if (pathExists(filePath)) {
-      /* scan the code */
+      // scan the code
       const code = fs.readFileSync(filePath, "utf-8");
+      const topLevelDeclarations = parseFile(code);
       const isEntryComponent = true;
-      /* if component's declaration is found, */
-      if (componentIsDeclaredInCode(code, componentName, isEntryComponent)) {
-        /* omit the user's private file structure */
+      // if component's declaration is found,
+      if (
+        componentIsDeclaredInCode(
+          topLevelDeclarations,
+          componentName,
+          isEntryComponent,
+        )
+      ) {
+        // omit the user's private file structure
         const relativePath = path.relative(projectRootDir, filePath);
         return relativePath;
       }
     }
   }
 
-  /* if the component declaration could not be found, */
+  // if the component declaration could not be found,
   return null;
 }
 
