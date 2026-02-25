@@ -103,10 +103,14 @@ function parseReactComponents(validatedComponents, filepath) {
               ({ declaration }) => declaration,
             ),
           ];
-          const internalArrowFunctionDeclarations =
-            internalDeclarations.regular_constants.filter(
+          const internalArrowFunctionDeclarations = [
+            ...internalDeclarations.regular_constants.filter(
               ({ init_type }) => init_type === "ArrowFunctionExpression",
-            );
+            ),
+            ...internalDeclarations.constants.filter(
+              ({ init_type }) => init_type === "ArrowFunctionExpression",
+            ),
+          ];
 
           //EXTRACT function names --> [ "func1", "func2", ... ]
           // A. function-defined

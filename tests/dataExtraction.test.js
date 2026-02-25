@@ -7,17 +7,6 @@ const verifyReactComponents = require("../src/verifyReactComponents");
 const parseReactComponents = require("../src/parseReactComponents");
 
 describe("Extract Data", () => {
-  // This test, "Extract Component nested in component factory",
-  // should be moved to edge cases
-  test("Extract Component nested in component factory", () => {
-    const fakePath = "../fake/Component.js";
-    const code = `const Component = memo(NestedComponent)`;
-    const topLevelDeclarations = parseFile(code);
-    const verifiedComponents = verifyReactComponents(topLevelDeclarations);
-    const result = parseReactComponents(verifiedComponents, fakePath);
-    const component = result[`Component::${fakePath}`];
-    expect(component.name).toEqual("Component");
-  });
   // STATE
   describe("Extract state from", () => {
     test("constants ArrowFunction", () => {
