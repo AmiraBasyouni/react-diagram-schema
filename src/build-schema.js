@@ -123,18 +123,11 @@ function build_schema(entryPoint, rootComponentName, verbosity = {}) {
       }
       continue;
     }
-    if (componentName && !schema[`${componentName}::${relativeFilePath}`]) {
-      //console.log(`Could not find ${componentName} at ${relativeFilePath}`);
-      unresolvedComponents.push({
-        componentName,
-        ID: `${componentName}::${relativeFilePath}`,
-      });
-    }
 
     // account for when multiple components are defined in the same file
     // create Unique IDs
     Object.values(schema).forEach((component) => {
-      const alias = getAlias(code, component.name);
+      const alias = getAlias(parsedFile.assignmentExpressions, component.name);
       // UID for default exported component is the component's imported name
       if (component.defaultExport) {
         components[`${componentName}::${relativeFilePath}`] = component;
@@ -151,6 +144,15 @@ function build_schema(entryPoint, rootComponentName, verbosity = {}) {
         components[Object.keys(components)[0]]["isEntryComponent"] = true;
       }
     });
+
+    // if we received a valid componentName and it has not been resolved before,
+    if (componentName && !schema[`${componentName}::${relativeFilePath}`]) {
+      // add it to our unresolved pile
+      unresolvedComponents.push({
+        componentName,
+        ID: `${componentName}::${relativeFilePath}`,
+      });
+    }
 
     // UNRESOLVED DESCENDANTS
     // for each of the component's descendants,
