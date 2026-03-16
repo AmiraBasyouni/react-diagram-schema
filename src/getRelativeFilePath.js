@@ -1,14 +1,14 @@
-// resolveFilePath.js
+// getRelativeFilePath.js
 // objective: find the file containing the declaration of a given component, the way a bundler does it */
 
 // imports
 const path = require("path");
 const fs = require("fs");
-const parseFile = require("./parseFile");
+const getParsedCode = require("./getParsedCode");
 const componentIsDeclaredInCode = require("./utils/componentIsDeclaredInCode");
 const { isFile, pathExists } = require("./utils/isFile");
 
-function resolveFilePath(entryPoint, componentName) {
+function getRelativeFilePath(entryPoint, componentName) {
   // store user's current working directory
   const projectRootDir = process.cwd();
 
@@ -52,7 +52,7 @@ function resolveFilePath(entryPoint, componentName) {
     if (pathExists(filePath)) {
       // scan the code
       const code = fs.readFileSync(filePath, "utf-8");
-      const topLevelDeclarations = parseFile(code);
+      const topLevelDeclarations = getParsedCode(code);
       const isEntryComponent = true;
       // if component's declaration is found,
       if (
@@ -73,4 +73,4 @@ function resolveFilePath(entryPoint, componentName) {
   return null;
 }
 
-module.exports = resolveFilePath;
+module.exports = getRelativeFilePath;

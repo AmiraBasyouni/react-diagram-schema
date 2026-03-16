@@ -2,9 +2,10 @@
 // Goal: Ensure props, states, context, and functions are accurately extracted from components.
 // Cases Covered: props, state, context
 //const parseCode = require("../src/parseCode");
-const parseFile = require("../src/parseFile");
-const verifyReactComponents = require("../src/verifyReactComponents");
-const parseReactComponents = require("../src/parseReactComponents");
+const getParsedCode = require("../src/getParsedCode");
+//const verifyReactComponents = require("../src/verifyReactComponents");
+//const parseReactComponents = require("../src/parseReactComponents");
+const getComponents = require("../src/getComponents");
 
 describe("Extract Data", () => {
   // STATE
@@ -18,9 +19,8 @@ describe("Extract Data", () => {
         return <div>{count} {theme}</div>;
       }
     `;
-      const topLevelDeclarations = parseFile(code);
-      const verifiedComponents = verifyReactComponents(topLevelDeclarations);
-      const result = parseReactComponents(verifiedComponents, fakePath);
+      const parsedCode = getParsedCode(code);
+      const result = getComponents(parsedCode, fakePath);
       const component = result[`StateComponent::${fakePath}`];
       expect(component.internal.states).toEqual(
         expect.arrayContaining([
@@ -38,9 +38,8 @@ describe("Extract Data", () => {
         return <div>{count} {theme}</div>;
       })
     `;
-      const topLevelDeclarations = parseFile(code);
-      const verifiedComponents = verifyReactComponents(topLevelDeclarations);
-      const result = parseReactComponents(verifiedComponents, fakePath);
+      const parsedCode = getParsedCode(code);
+      const result = getComponents(parsedCode, fakePath);
       const component = result[`StateComponent::${fakePath}`];
       expect(component.internal.states).toEqual(
         expect.arrayContaining([
@@ -59,9 +58,8 @@ describe("Extract Data", () => {
         return <div>{count} {theme}</div>;
       }
     `;
-      const topLevelDeclarations = parseFile(code);
-      const verifiedComponents = verifyReactComponents(topLevelDeclarations);
-      const result = parseReactComponents(verifiedComponents, fakePath);
+      const parsedCode = getParsedCode(code);
+      const result = getComponents(parsedCode, fakePath);
       const component = result[`StateComponent::${fakePath}`];
       expect(component.internal.states).toEqual(
         expect.arrayContaining([
@@ -84,9 +82,8 @@ describe("Extract Data", () => {
         } 
       }
     `;
-      const topLevelDeclarations = parseFile(code);
-      const verifiedComponents = verifyReactComponents(topLevelDeclarations);
-      const result = parseReactComponents(verifiedComponents, fakePath);
+      const parsedCode = getParsedCode(code);
+      const result = getComponents(parsedCode, fakePath);
       const component = result[`StateComponent::${fakePath}`];
       expect(component.internal.states).toEqual(
         expect.arrayContaining([["color"]]),
@@ -101,9 +98,8 @@ describe("Extract Data", () => {
         return <div>{count} {theme}</div>;
       }
     `;
-      const topLevelDeclarations = parseFile(code);
-      const verifiedComponents = verifyReactComponents(topLevelDeclarations);
-      const result = parseReactComponents(verifiedComponents, fakePath);
+      const parsedCode = getParsedCode(code);
+      const result = getComponents(parsedCode, fakePath);
       const component = result[`::${fakePath}`];
       expect(component.internal.states).toEqual(
         expect.arrayContaining([
@@ -121,9 +117,8 @@ describe("Extract Data", () => {
         return <div>{count} {theme}</div>;
       }
     `;
-      const topLevelDeclarations = parseFile(code);
-      const verifiedComponents = verifyReactComponents(topLevelDeclarations);
-      const result = parseReactComponents(verifiedComponents, fakePath);
+      const parsedCode = getParsedCode(code);
+      const result = getComponents(parsedCode, fakePath);
       const component = result[`StateComponent::${fakePath}`];
       expect(component.internal.states).toEqual(
         expect.arrayContaining([
@@ -151,9 +146,8 @@ describe("Extract Data", () => {
     }
   `;
 
-      const topLevelDeclarations = parseFile(code);
-      const verifiedComponents = verifyReactComponents(topLevelDeclarations);
-      const result = parseReactComponents(verifiedComponents, fakePath);
+      const parsedCode = getParsedCode(code);
+      const result = getComponents(parsedCode, fakePath);
       const componentKey = `FunctionExtraction::${fakePath}`;
       const component = result[componentKey];
       const internalFunctions = component.internal.functions;
@@ -172,9 +166,8 @@ describe("Extract Data", () => {
         return <p></p>;
       }
     `;
-      const topLevelDeclarations = parseFile(code);
-      const verifiedComponents = verifyReactComponents(topLevelDeclarations);
-      const result = parseReactComponents(verifiedComponents, fakePath);
+      const parsedCode = getParsedCode(code);
+      const result = getComponents(parsedCode, fakePath);
       const component = result[`Component::${fakePath}`];
       expect(component.internal.functions).toContain("NestedComponent");
     });
@@ -189,9 +182,8 @@ describe("Extract Data", () => {
       }
     `;
 
-      const topLevelDeclarations = parseFile(code);
-      const verifiedComponents = verifyReactComponents(topLevelDeclarations);
-      const result = parseReactComponents(verifiedComponents, fakePath);
+      const parsedCode = getParsedCode(code);
+      const result = getComponents(parsedCode, fakePath);
       const component = result[`PropsComponent::${fakePath}`];
       expect(component.external.props).toEqual(
         expect.arrayContaining(["title", "count"]),
@@ -210,9 +202,8 @@ describe("Extract Data", () => {
       }
     `;
 
-      const topLevelDeclarations = parseFile(code);
-      const verifiedComponents = verifyReactComponents(topLevelDeclarations);
-      const result = parseReactComponents(verifiedComponents, fakePath);
+      const parsedCode = getParsedCode(code);
+      const result = getComponents(parsedCode, fakePath);
       const component = result[`ContextComponent::${fakePath}`];
 
       expect(component.external.context).toEqual(
@@ -233,27 +224,24 @@ describe("Extract Data", () => {
         return <HomePage/>;
       }
     `;
-        const topLevelDeclarations = parseFile(code);
-        const verifiedComponents = verifyReactComponents(topLevelDeclarations);
-        const result = parseReactComponents(verifiedComponents, fakePath);
+        const parsedCode = getParsedCode(code);
+        const result = getComponents(parsedCode, fakePath);
         const component = result[`DescendantsComponent::${fakePath}`];
         expect(component.unresolvedDescendants).toEqual(["HomePage"]);
       });
       test("constant ArrowFunctions, no blockStatement", () => {
         const fakePath = "../fake/DescendantsComponent.js";
         const code = `const DescendantsComponent = () => <HomePage/>;`;
-        const topLevelDeclarations = parseFile(code);
-        const verifiedComponents = verifyReactComponents(topLevelDeclarations);
-        const result = parseReactComponents(verifiedComponents, fakePath);
+        const parsedCode = getParsedCode(code);
+        const result = getComponents(parsedCode, fakePath);
         const component = result[`DescendantsComponent::${fakePath}`];
         expect(component.unresolvedDescendants).toEqual(["HomePage"]);
       });
       test("constant ArrowFunctions, with blockStatement", () => {
         const fakePath = "../fake/DescendantsComponent.js";
         const code = `const DescendantsComponent = () => { return <HomePage/>; }`;
-        const topLevelDeclarations = parseFile(code);
-        const verifiedComponents = verifyReactComponents(topLevelDeclarations);
-        const result = parseReactComponents(verifiedComponents, fakePath);
+        const parsedCode = getParsedCode(code);
+        const result = getComponents(parsedCode, fakePath);
         const component = result[`DescendantsComponent::${fakePath}`];
         expect(component.unresolvedDescendants).toEqual(["HomePage"]);
       });
@@ -266,9 +254,8 @@ describe("Extract Data", () => {
         return <Header></Header>;
       }
     `;
-      const topLevelDeclarations = parseFile(code);
-      const verifiedComponents = verifyReactComponents(topLevelDeclarations);
-      const result = parseReactComponents(verifiedComponents, fakePath);
+      const parsedCode = getParsedCode(code);
+      const result = getComponents(parsedCode, fakePath);
       const component = result[`DescendantsComponent::${fakePath}`];
       expect(component.unresolvedDescendants).toEqual(["Header"]);
     });
@@ -280,9 +267,8 @@ describe("Extract Data", () => {
         return <Routes><Route><Hello/></Route></Routes>;
       }
     `;
-      const topLevelDeclarations = parseFile(code);
-      const verifiedComponents = verifyReactComponents(topLevelDeclarations);
-      const result = parseReactComponents(verifiedComponents, fakePath);
+      const parsedCode = getParsedCode(code);
+      const result = getComponents(parsedCode, fakePath);
       const component = result[`NestedDescendantsComponent::${fakePath}`];
       expect(component.unresolvedDescendants).toEqual([
         "Routes",
@@ -295,27 +281,24 @@ describe("Extract Data", () => {
     test("export default () =>", () => {
       const fakePath = "../fake/StateComponent.js";
       const code = `export default () => <JSX/>`;
-      const topLevelDeclarations = parseFile(code);
-      const verifiedComponents = verifyReactComponents(topLevelDeclarations);
-      const result = parseReactComponents(verifiedComponents, fakePath);
+      const parsedCode = getParsedCode(code);
+      const result = getComponents(parsedCode, fakePath);
       const component = result[`::${fakePath}`];
       expect(component.defaultExport).toEqual(true);
     });
     test("export default function", () => {
       const fakePath = "../fake/StateComponent.js";
       const code = `export default function StateComponent(){ return <JSX/> }`;
-      const topLevelDeclarations = parseFile(code);
-      const verifiedComponents = verifyReactComponents(topLevelDeclarations);
-      const result = parseReactComponents(verifiedComponents, fakePath);
+      const parsedCode = getParsedCode(code);
+      const result = getComponents(parsedCode, fakePath);
       const component = result[`StateComponent::${fakePath}`];
       expect(component.defaultExport).toEqual(true);
     });
     test("export named", () => {
       const fakePath = "../fake/StateComponent.js";
       const code = `export const StateComponent = () => <JSX/>`;
-      const topLevelDeclarations = parseFile(code);
-      const verifiedComponents = verifyReactComponents(topLevelDeclarations);
-      const result = parseReactComponents(verifiedComponents, fakePath);
+      const parsedCode = getParsedCode(code);
+      const result = getComponents(parsedCode, fakePath);
       const component = result[`StateComponent::${fakePath}`];
       expect(component.defaultExport).toEqual(false);
     });

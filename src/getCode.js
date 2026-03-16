@@ -2,7 +2,7 @@ const fs = require("fs");
 const path = require("path");
 const { transpileTSFile } = require("./utils/compileTS");
 
-function readSourceFile(inputPath) {
+function getCode(inputPath) {
   if (!inputPath) {
     console.error("ERROR: Please provide a file path.");
     process.exit(1);
@@ -26,4 +26,4 @@ function readSourceFile(inputPath) {
   }
 }
 
-module.exports = readSourceFile;
+module.exports = getCode;
