@@ -227,7 +227,9 @@ describe("Extract Data", () => {
         const parsedCode = getParsedCode(code);
         const result = getComponents(parsedCode, fakePath);
         const component = result[`DescendantsComponent::${fakePath}`];
-        expect(component.unresolvedDescendants).toEqual(["HomePage"]);
+        expect(Array.from(component.unresolvedDescendants)).toEqual([
+          ["HomePage", ""],
+        ]);
       });
       test("constant ArrowFunctions, no blockStatement", () => {
         const fakePath = "../fake/DescendantsComponent.js";
@@ -235,7 +237,9 @@ describe("Extract Data", () => {
         const parsedCode = getParsedCode(code);
         const result = getComponents(parsedCode, fakePath);
         const component = result[`DescendantsComponent::${fakePath}`];
-        expect(component.unresolvedDescendants).toEqual(["HomePage"]);
+        expect(Array.from(component.unresolvedDescendants)).toEqual([
+          ["HomePage", ""],
+        ]);
       });
       test("constant ArrowFunctions, with blockStatement", () => {
         const fakePath = "../fake/DescendantsComponent.js";
@@ -243,7 +247,9 @@ describe("Extract Data", () => {
         const parsedCode = getParsedCode(code);
         const result = getComponents(parsedCode, fakePath);
         const component = result[`DescendantsComponent::${fakePath}`];
-        expect(component.unresolvedDescendants).toEqual(["HomePage"]);
+        expect(Array.from(component.unresolvedDescendants)).toEqual([
+          ["HomePage", ""],
+        ]);
       });
     });
 
@@ -257,7 +263,9 @@ describe("Extract Data", () => {
       const parsedCode = getParsedCode(code);
       const result = getComponents(parsedCode, fakePath);
       const component = result[`DescendantsComponent::${fakePath}`];
-      expect(component.unresolvedDescendants).toEqual(["Header"]);
+      expect(Array.from(component.unresolvedDescendants)).toEqual([
+        ["Header", ""],
+      ]);
     });
 
     test("nestedDescendants", () => {
@@ -270,10 +278,10 @@ describe("Extract Data", () => {
       const parsedCode = getParsedCode(code);
       const result = getComponents(parsedCode, fakePath);
       const component = result[`NestedDescendantsComponent::${fakePath}`];
-      expect(component.unresolvedDescendants).toEqual([
-        "Routes",
-        "Route",
-        "Hello",
+      expect(Array.from(component.unresolvedDescendants)).toEqual([
+        ["Routes", ""],
+        ["Route", ""],
+        ["Hello", ""],
       ]);
     });
   });

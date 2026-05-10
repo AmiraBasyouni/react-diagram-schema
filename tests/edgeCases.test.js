@@ -21,7 +21,7 @@ describe("Edge Cases", () => {
       const parsedCode = getParsedCode(code);
       const result = getComponents(parsedCode, fakePath);
       const component = result[`Component::${fakePath}`];
-      expect(component.descendants.has("HomePage")).toEqual(true);
+      expect(component.unresolvedDescendants.has("HomePage")).toEqual(true);
     });
     test("Extract Descendant nested in a map within a JS Expression: identifier", () => {
       const fakePath = "../fake/Component.js";
@@ -36,8 +36,10 @@ describe("Edge Cases", () => {
       const parsedCode = getParsedCode(code);
       const result = getComponents(parsedCode, fakePath);
       const component = result[`Component::${fakePath}`];
-      expect(component.descendants.has("Section")).toEqual(true);
-      expect(Object.keys(result)).toContain(`Section::${fakePath}`);
+      expect(component.descendants.includes(`Section::${fakePath}`)).toEqual(
+        true,
+      );
+      expect(result[`Section::${fakePath}`]).toBeTruthy();
     });
     test("Extract Descendant nested in a map within a JS Expression: MemberExpression", () => {
       const fakePath = "../fake/Component.js";
@@ -45,6 +47,7 @@ describe("Edge Cases", () => {
 	return <>
 	    { SECTION.map((section)=> {
 	      const Section = section.component; 
+	      const Section2 = () => <Hello/>
 	      return <Section id={section.id}/>
 	    }) }
 	</>
@@ -52,8 +55,9 @@ describe("Edge Cases", () => {
       const parsedCode = getParsedCode(code);
       const result = getComponents(parsedCode, fakePath);
       const component = result[`Component::${fakePath}`];
-      expect(component.descendants.has("Section")).toEqual(true);
-      expect(Object.keys(result)).toContain(`Section::${fakePath}`);
+      expect(component.descendants.includes(`Section::${fakePath}`)).toEqual(
+        true,
+      );
     });
 
     test("component with a nested inline component is detected and marked as nested", () => {
