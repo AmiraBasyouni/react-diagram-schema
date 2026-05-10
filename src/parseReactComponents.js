@@ -23,7 +23,7 @@ function parseReactComponents(validatedComponents, filepath) {
         export_type,
         verified = new Set(),
       }) => {
-        const obj = {
+        const component = {
           name: "",
           description: "",
           descendants: [],
@@ -37,10 +37,10 @@ function parseReactComponents(validatedComponents, filepath) {
         const decl = declarator ? declarator : declaration;
 
         //EXTRACT name
-        obj.name = decl.node.id ? decl.node.id.name : "";
+        component.name = decl.node.id ? decl.node.id.name : "";
 
         //EXTRACT location
-        obj.location = {
+        component.location = {
           line: decl.node.loc.start.line,
           filepath,
         };
@@ -53,14 +53,14 @@ function parseReactComponents(validatedComponents, filepath) {
             declaration_type === "VariableDeclaration" &&
             decl.get("init").node.arguments[0].type === "Identifier"
           ) {
-            return obj;
+            return component;
           }
           // or export default memo(OtherComponent)
           if (
             declaration_type === "CallExpression" &&
             decl.node.arguments[0].type === "Identifier"
           ) {
-            return obj;
+            return component;
           }
           // otherwise this is probably a forwardRef( () => {} )
         }
@@ -115,7 +115,7 @@ function parseReactComponents(validatedComponents, filepath) {
 
           //EXTRACT function names --> [ "func1", "func2", ... ]
           // A. function-defined
-          obj.internal.functions = internalFunctionDeclarations
+          component.internal.functions = internalFunctionDeclarations
             .map((func) => func.node.id?.name)
             //.map((fn) => fn.node.id?.name) // access name if it exists
             .filter(Boolean); // filter out any undefined or null names
@@ -124,7 +124,7 @@ function parseReactComponents(validatedComponents, filepath) {
             .map(({ declarator }) => declarator.node.id?.name)
             .filter(Boolean);
           // append inline arrow functions
-          obj.internal.functions.push(...inline);
+          component.internal.functions.push(...inline);
 
           // helper function: verify reactHook is useState | useContext
           const isStateVariable = (path, reactHook) => {
@@ -148,7 +148,7 @@ function parseReactComponents(validatedComponents, filepath) {
           const state_values = useState_declarators.map(({ declarator }) =>
             declarator.node.id.elements.map((element) => element.name),
           );
-          obj.internal.states = state_values;
+          component.internal.states = state_values;
 
           // extract useContext declarators
           const context_declarators =
@@ -174,13 +174,13 @@ function parseReactComponents(validatedComponents, filepath) {
             }
             context.push({ source, values });
           });
-          obj.external.context = context;
+          component.external.context = context;
 
           const returnStatementPath = internalDeclarations.returnStatement[0];
           //EXTRACT COMPONENT DESCENDANTS
           const resolvedDescendant = extractComponentDescendants({
             returnStatementPath,
-            obj,
+            component,
             filepath,
           });
           if (resolvedDescendant) {
@@ -193,7 +193,7 @@ function parseReactComponents(validatedComponents, filepath) {
           const returnStatementPath = componentPath.get("body");
           const resolvedDescendant = extractComponentDescendants({
             returnStatementPath,
-            obj,
+            component,
             filepath,
           });
 
@@ -214,19 +214,21 @@ function parseReactComponents(validatedComponents, filepath) {
               param.get("properties").forEach((prop) => {
                 if (prop.isObjectProperty()) {
                   //CASE: prop type is an ObjectProperty
-                  obj.external.props.push(prop.node.key.name);
+                  component.external.props.push(prop.node.key.name);
                 } else if (prop.isRestElement()) {
                   // CASE: prop type is a RestElement
-                  obj.external.props.push(`...${prop.node.argument.name}`);
+                  component.external.props.push(
+                    `...${prop.node.argument.name}`,
+                  );
                 }
               });
               // if the parameter is an identifier (e.g. ref)
             } else if (param.isIdentifier()) {
-              obj.external.props.push(param.node.name);
+              component.external.props.push(param.node.name);
             }
           });
         }
-        return obj;
+        return component;
       },
     );
   }
@@ -261,7 +263,7 @@ function parseReactComponents(validatedComponents, filepath) {
 
 function extractComponentDescendants({
   returnStatementPath,
-  obj: component,
+  component,
   filepath,
 }) {
   const tentativeDescendantsMap = new Map();
