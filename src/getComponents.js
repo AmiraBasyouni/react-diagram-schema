@@ -1,14 +1,14 @@
-// getSchema.js
+// getComponents.js
 
 //const parseFile = require("./parseFile");
 const verifyReactComponents = require("./verifyReactComponents");
 const parseReactComponents = require("./parseReactComponents");
 
-function getSchema(topLevelDeclarations, filePath) {
+function getComponents(parsedCode, filePath) {
   //const topLevelDeclarations = parseFile(sourceCode);
-  const verifiedComponents = verifyReactComponents(topLevelDeclarations);
+  const verifiedComponents = verifyReactComponents(parsedCode);
   const components = parseReactComponents(verifiedComponents, filePath);
   return components;
 }
 
-module.exports = getSchema;
+module.exports = getComponents;

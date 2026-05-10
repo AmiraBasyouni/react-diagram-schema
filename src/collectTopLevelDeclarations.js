@@ -10,6 +10,7 @@ function collectTopLevelDeclarations(program_body) {
     regular_functions: [],
     classes: [],
     returnStatement: [],
+    assignmentExpressions: [],
   };
 
   const isFirstLetterCapitalized = (name) => /^[A-Z]/.test(name);
@@ -98,6 +99,7 @@ function collectTopLevelDeclarations(program_body) {
                       break;
                     }
                     case "Identifier":
+                    case "MemberExpression":
                     case "CallExpression":
                     case "JSXElement": {
                       topLevelDeclarations.constants.push({
@@ -145,6 +147,13 @@ function collectTopLevelDeclarations(program_body) {
         // stores return statements
         case "ReturnStatement": {
           topLevelDeclarations.returnStatement.push(bodyPath);
+          break;
+        }
+        case "ExpressionStatement": {
+          const expression = bodyPath.get("expression");
+          if (expression.isAssignmentExpression()) {
+            topLevelDeclarations.assignmentExpressions.push(bodyPath);
+          }
           break;
         }
       }

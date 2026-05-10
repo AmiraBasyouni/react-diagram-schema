@@ -11,6 +11,7 @@ function parseReactComponents(validatedComponents, filepath) {
     classes: [],
     exports: [],
   };
+  const resolvedDescendants = [];
   function extract(validatedComponents = []) {
     return validatedComponents.map(
       ({
@@ -20,9 +21,9 @@ function parseReactComponents(validatedComponents, filepath) {
         declaration,
         declaration_type,
         export_type,
-        verified,
+        verified = new Set(),
       }) => {
-        const obj = {
+        const component = {
           name: "",
           description: "",
           descendants: [],
@@ -30,16 +31,16 @@ function parseReactComponents(validatedComponents, filepath) {
           external: { props: [], context: [], constants: [] },
           defaultExport: export_type && export_type === "default",
           location: null,
-          unresolvedDescendants: new Set(),
+          unresolvedDescendants: new Map(),
         };
 
         const decl = declarator ? declarator : declaration;
 
         //EXTRACT name
-        obj.name = decl.node.id ? decl.node.id.name : "";
+        component.name = decl.node.id ? decl.node.id.name : "";
 
         //EXTRACT location
-        obj.location = {
+        component.location = {
           line: decl.node.loc.start.line,
           filepath,
         };
@@ -52,14 +53,14 @@ function parseReactComponents(validatedComponents, filepath) {
             declaration_type === "VariableDeclaration" &&
             decl.get("init").node.arguments[0].type === "Identifier"
           ) {
-            return obj;
+            return component;
           }
           // or export default memo(OtherComponent)
           if (
             declaration_type === "CallExpression" &&
             decl.node.arguments[0].type === "Identifier"
           ) {
-            return obj;
+            return component;
           }
           // otherwise this is probably a forwardRef( () => {} )
         }
@@ -114,7 +115,7 @@ function parseReactComponents(validatedComponents, filepath) {
 
           //EXTRACT function names --> [ "func1", "func2", ... ]
           // A. function-defined
-          obj.internal.functions = internalFunctionDeclarations
+          component.internal.functions = internalFunctionDeclarations
             .map((func) => func.node.id?.name)
             //.map((fn) => fn.node.id?.name) // access name if it exists
             .filter(Boolean); // filter out any undefined or null names
@@ -123,7 +124,7 @@ function parseReactComponents(validatedComponents, filepath) {
             .map(({ declarator }) => declarator.node.id?.name)
             .filter(Boolean);
           // append inline arrow functions
-          obj.internal.functions.push(...inline);
+          component.internal.functions.push(...inline);
 
           // helper function: verify reactHook is useState | useContext
           const isStateVariable = (path, reactHook) => {
@@ -147,7 +148,7 @@ function parseReactComponents(validatedComponents, filepath) {
           const state_values = useState_declarators.map(({ declarator }) =>
             declarator.node.id.elements.map((element) => element.name),
           );
-          obj.internal.states = state_values;
+          component.internal.states = state_values;
 
           // extract useContext declarators
           const context_declarators =
@@ -173,17 +174,32 @@ function parseReactComponents(validatedComponents, filepath) {
             }
             context.push({ source, values });
           });
-          obj.external.context = context;
+          component.external.context = context;
 
           const returnStatementPath = internalDeclarations.returnStatement[0];
           //EXTRACT COMPONENT DESCENDANTS
-          extractComponentDescendants({ returnStatementPath, obj });
+          const resolvedDescendant = extractComponentDescendants({
+            returnStatementPath,
+            component,
+            filepath,
+          });
+          if (resolvedDescendant) {
+            resolvedDescendants.push(resolvedDescendant);
+          }
         } // ---- END OF BLOCK STATEMENT CODE ---------------------------------------------
 
         //EXTRACT non-blockstatement COMPONENT DESCENDANTS (e.g. () => JSX in ArrowFunctionExpressions)
         else {
           const returnStatementPath = componentPath.get("body");
-          extractComponentDescendants({ returnStatementPath, obj });
+          const resolvedDescendant = extractComponentDescendants({
+            returnStatementPath,
+            component,
+            filepath,
+          });
+
+          if (resolvedDescendant) {
+            resolvedDescendants.push(resolvedDescendant);
+          }
         }
 
         //EXTRACT externally defined props -> ["propA", "propB", "propC", ...]
@@ -198,19 +214,21 @@ function parseReactComponents(validatedComponents, filepath) {
               param.get("properties").forEach((prop) => {
                 if (prop.isObjectProperty()) {
                   //CASE: prop type is an ObjectProperty
-                  obj.external.props.push(prop.node.key.name);
+                  component.external.props.push(prop.node.key.name);
                 } else if (prop.isRestElement()) {
                   // CASE: prop type is a RestElement
-                  obj.external.props.push(`...${prop.node.argument.name}`);
+                  component.external.props.push(
+                    `...${prop.node.argument.name}`,
+                  );
                 }
               });
               // if the parameter is an identifier (e.g. ref)
             } else if (param.isIdentifier()) {
-              obj.external.props.push(param.node.name);
+              component.external.props.push(param.node.name);
             }
           });
         }
-        return obj;
+        return component;
       },
     );
   }
@@ -230,11 +248,25 @@ function parseReactComponents(validatedComponents, filepath) {
     components[`${component.name}::${component.location.filepath}`] = component;
   });
 
+  resolvedDescendants.forEach((resolvedDescendant) => {
+    const [desc_key, desc_value] = resolvedDescendant;
+    // if descendant was not detected as a top level component
+    if (!components[desc_key]) {
+      // record it and label it as nested
+      components[desc_key] = desc_value;
+      components[desc_key].nested = true;
+    }
+  });
+
   return components;
 }
 
-function extractComponentDescendants({ returnStatementPath, obj }) {
-  const descendantsMap = new Map();
+function extractComponentDescendants({
+  returnStatementPath,
+  component,
+  filepath,
+}) {
+  const tentativeDescendantsMap = new Map();
 
   function handleJSXElement(elementPath) {
     const opening = elementPath.node.openingElement;
@@ -254,28 +286,76 @@ function extractComponentDescendants({ returnStatementPath, obj }) {
       }
     }
 
+    // do not treat top-level component as a descendant
+    // PREVENTS INFINITE LOOP
+    if (tagName === component.name) return false;
+
     // Only add component-like elements (capitalized, not HTML tags)
     if (tagName && /^[A-Z]/.test(tagName)) {
-      // create a temporary list of this component's unresolved descendants
-      // (this list gets resolved in build-schema.js)
-      obj.unresolvedDescendants.add(tagName);
-      descendantsMap.set(tagName, {
-        location: {},
-      });
+      // set unresolved descendant to filepath "" temporarily
+      // (this tentative map gets resolved in build-schema.js)
+      tentativeDescendantsMap.set(tagName, "");
+
+      // check whether descendant is declared in the current filepath
+      // (if so, resolve filepath here instead of in build-schema.js)
+      const elementBinding = elementPath.scope.getBinding(tagName);
+
+      // if descendant is not declared anywhere, it could be global or unresolved
+      // Failed: could not resolve descendant within this filepath
+      if (!elementBinding) return false;
+
+      const bindingPath = elementBinding.path;
+      if (bindingPath) {
+        if (
+          bindingPath.isFunctionDeclaration() ||
+          bindingPath.isVariableDeclarator()
+        ) {
+          // parse descendant
+          const declaration = bindingPath.isVariableDeclarator()
+            ? bindingPath.parentPath
+            : bindingPath;
+          const declarations = collectTopLevelDeclarations([declaration]);
+          const descendants = parseReactComponents(
+            [
+              ...declarations.constants,
+              ...declarations.regular_constants,
+              ...declarations.functions,
+              ...declarations.regular_functions,
+            ],
+            filepath,
+          );
+          if (descendants[`${tagName}::${filepath}`]) {
+            // Success: resolved descendant
+            // remove resolved descendant from tentative Map
+            tentativeDescendantsMap.delete(tagName);
+            // add UID to component.descendants
+            component.descendants.push(`${tagName}::${filepath}`);
+            // add the parsed descendant to resolvedDescendants
+            const resolvedDescendant = Object.entries(descendants)[0];
+            return resolvedDescendant;
+          }
+          // Failed: could not resolve descendant within this filepath
+          return false;
+        }
+      }
     }
   }
 
+  let result = "";
   //EXTRACT component descendants
+  // When return is <Jsx/>
   if (returnStatementPath.isJSXElement()) {
-    handleJSXElement(returnStatementPath);
+    result = handleJSXElement(returnStatementPath);
+  } else {
+    // When return contains JSX
+    returnStatementPath.traverse({
+      JSXElement(elementPath) {
+        result = handleJSXElement(elementPath);
+      },
+    });
   }
-  (returnStatementPath.traverse({
-    JSXElement(elementPath) {
-      handleJSXElement(elementPath);
-    },
-  }),
-    (obj.descendants = descendantsMap));
-  obj.unresolvedDescendants = Array.from(obj.unresolvedDescendants);
+  component.unresolvedDescendants = tentativeDescendantsMap;
+  return result;
 }
 
 module.exports = parseReactComponents;

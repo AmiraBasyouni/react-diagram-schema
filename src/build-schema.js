@@ -2,10 +2,10 @@
 
 // imports
 const path = require("path");
-const parseFile = require("./parseFile");
-const getSchema = require("./getSchema");
-const resolveFilePath = require("./resolveFilePath");
-const readSourceFile = require("./readSourceFile");
+const getParsedCode = require("./getParsedCode");
+const getComponents = require("./getComponents");
+const getRelativeFilePath = require("./getRelativeFilePath");
+const getCode = require("./getCode");
 const parseImport = require("./parseImport");
 const resolveComponent = require("./resolveComponent");
 const { isFile, isDirectory, pathExists } = require("./utils/isFile");
@@ -14,12 +14,12 @@ const getAlias = require("./utils/getAlias");
 
 // INITIALIZING VARIABLES
 // warnings: an array to collect warnings related to insufficient data
-// components: an object to store the schema
+// componentsByUID: an object to store the schema
 // filesVisited: a Map to prevent multiple visits to the same file
 // importResolutions: a Map to prevent multiple resolutions for the same import path
 // stack: an array to organize visiting logic
 const warnings = [];
-const components = {};
+const componentsByUID = {};
 const filesVisited = new Map();
 const importResolutions = new Map();
 const stack = [];
@@ -87,8 +87,8 @@ function build_schema(entryPoint, rootComponentName, verbosity = {}) {
     const { entryPoint, componentName = "" } = stack.pop();
 
     // rely on this relative file path to hide the user's private file structure
-    const relativeFilePath = resolveFilePath(entryPoint, componentName);
-    // Guard Clause: on resolveFilePath() failure, log a warning and skip the current file
+    const relativeFilePath = getRelativeFilePath(entryPoint, componentName);
+    // Guard Clause: on getRelativeFilePath() failure, log a warning and skip the current file
     if (!relativeFilePath) {
       if (verbosity.verbose) {
         log(
@@ -108,13 +108,13 @@ function build_schema(entryPoint, rootComponentName, verbosity = {}) {
     filesVisited.set(relativeFilePath, true);
 
     // retrieve the file's code as a string
-    const code = readSourceFile(relativeFilePath);
+    const code = getCode(relativeFilePath);
 
-    // GENERATE SCHEMA
-    const parsedFile = parseFile(code);
-    const schema = getSchema(parsedFile, relativeFilePath);
-    // Guard Clause: on getSchema() failure, log a warning and skip the current file
-    if (!schema) {
+    // GET COMPONENTS
+    const parsedCode = getParsedCode(code);
+    const components = getComponents(parsedCode, relativeFilePath);
+    // Guard Clause: on getComponents() failure, log a warning and skip the current file
+    if (!components) {
       if (verbosity.verbose) {
         log(
           `(build-schema) failed to parse component "${componentName}" in the file "${relativeFilePath}"`,
@@ -123,57 +123,50 @@ function build_schema(entryPoint, rootComponentName, verbosity = {}) {
       }
       continue;
     }
-    if (componentName && !schema[`${componentName}::${relativeFilePath}`]) {
-      //console.log(`Could not find ${componentName} at ${relativeFilePath}`);
+
+    // account for when multiple components are defined in the same file
+    // create Unique IDs
+    Object.values(components).forEach((component) => {
+      const alias = getAlias(parsedCode.assignmentExpressions, component.name);
+      // UID for default exported component is the component's imported name
+      if (component.defaultExport) {
+        componentsByUID[`${componentName}::${relativeFilePath}`] = component;
+        // UID for imported components that have an alias uses alias when available
+      } else if (alias) {
+        componentsByUID[`${alias}::${relativeFilePath}`] = component;
+        // UID for all other components uses the assigned name of that component
+      } else {
+        componentsByUID[`${component.name}::${relativeFilePath}`] = component;
+      }
+      // if this is the first parsed component
+      if (Object.keys(componentsByUID).length === 1) {
+        // mark it as the entry component
+        componentsByUID[Object.keys(componentsByUID)[0]]["isEntryComponent"] =
+          true;
+      }
+    });
+
+    // if we received a valid componentName and it has not been resolved before,
+    if (componentName && !components[`${componentName}::${relativeFilePath}`]) {
+      // add it to our unresolved pile
       unresolvedComponents.push({
         componentName,
         ID: `${componentName}::${relativeFilePath}`,
       });
     }
 
-    // account for when multiple components are defined in the same file
-    // create Unique IDs
-    Object.values(schema).forEach((component) => {
-      const alias = getAlias(code, component.name);
-      // UID for default exported component is the component's imported name
-      if (component.defaultExport) {
-        components[`${componentName}::${relativeFilePath}`] = component;
-        // UID for imported components that have an alias uses alias when available
-      } else if (alias) {
-        components[`${alias}::${relativeFilePath}`] = component;
-        // UID for all other components uses the assigned name of that component
-      } else {
-        components[`${component.name}::${relativeFilePath}`] = component;
-      }
-      // if this is the first parsed component
-      if (Object.keys(components).length === 1) {
-        // mark it as the entry component
-        components[Object.keys(components)[0]]["isEntryComponent"] = true;
-      }
-    });
-
     // UNRESOLVED DESCENDANTS
     // for each of the component's descendants,
-    Object.values(schema).forEach((component) => {
-      component.unresolvedDescendants.forEach((unresolvedDescendant) => {
-        // check if descendant is declared in the current file
-        const unresolvedDescendantIsInCurrentFile =
-          schema[`${unresolvedDescendant}::${relativeFilePath}`];
-        // if so, set its location to the current file
-        if (unresolvedDescendantIsInCurrentFile) {
-          component["descendants"]?.set(unresolvedDescendant, {
-            location: { filepath: relativeFilePath },
-          });
-          return;
-        }
-        // otherwise,
+    Object.values(components).forEach((component) => {
+      component.unresolvedDescendants.forEach((fp, unresolvedDescendant) => {
+        //(filepath_unresolvedDescendant, unresolvedDescendant) => {
         // collect the descendant's import path
         // and importedName i.e. ComponentA as A if relevant
         const {
           importSource: descendantImportPath,
           localName,
           importedName,
-        } = parseImport(parsedFile.imports, unresolvedDescendant);
+        } = parseImport(parsedCode.imports, unresolvedDescendant);
         const importName = importedName ? importedName : localName;
         // remember imported Names when relevant, to resolve them later
         if (importName && unresolvedDescendant !== importName) {
@@ -251,16 +244,18 @@ function build_schema(entryPoint, rootComponentName, verbosity = {}) {
           // Guard Clause: if the import statement of this descendant leads to a node_modules file
           // file path will be set to descendantImportPath
           // e.g. TooltipPrimitive::@radix-ui/react-tooltip
-          component.descendants?.set(unresolvedDescendant, {
-            location: { filepath: descendantImportPath },
-          });
+          component.unresolvedDescendants.set(
+            unresolvedDescendant,
+            descendantImportPath,
+          );
           // add path to node_modules
           node_modules.push({ unresolvedDescendant, descendantImportPath });
         } else {
           // update component's descendant's file path
-          component.descendants?.set(unresolvedDescendant, {
-            location: { filepath: resolvedImport_RelativeFilePath },
-          });
+          component.unresolvedDescendants.set(
+            unresolvedDescendant,
+            resolvedImport_RelativeFilePath,
+          );
           // if file has already been visited,
           if (filesVisited.get(resolvedImport_RelativeFilePath)) {
             // resolve remaining unresolved descendants
@@ -288,12 +283,12 @@ function build_schema(entryPoint, rootComponentName, verbosity = {}) {
           }
         }
       });
+      // transform component descendants from type Map to type Array
+      component.descendants = Array.from(
+        component.unresolvedDescendants.entries(),
+      ).map(([name, filepath]) => `${name}::${filepath}`);
       // clear and hide unresolvedDescendants from JSON file output
       component.unresolvedDescendants = undefined;
-      // transform component descendants from type Map to type Array
-      component.descendants = Array.from(component.descendants.entries()).map(
-        ([name, metadata]) => `${name}::${metadata.location.filepath}`,
-      );
     });
   }
 
@@ -302,13 +297,13 @@ function build_schema(entryPoint, rootComponentName, verbosity = {}) {
   importedNames.forEach(({ importName, filepath, unresolvedDescendant }) => {
     const filepathResolution = importResolutions.get(filepath);
     const relativeResolution = getRelativeFromAbsolutePath(filepathResolution);
-    components[`${unresolvedDescendant}::${relativeResolution}`] =
-      components[`${importName}::${relativeResolution}`];
+    componentsByUID[`${unresolvedDescendant}::${relativeResolution}`] =
+      componentsByUID[`${importName}::${relativeResolution}`];
   });
 
   // And, create a component for each node_modules file
   node_modules.forEach(({ unresolvedDescendant, descendantImportPath }) => {
-    components[`${unresolvedDescendant}::${descendantImportPath}`] = {
+    componentsByUID[`${unresolvedDescendant}::${descendantImportPath}`] = {
       name: unresolvedDescendant,
       description: "",
       type: "node_module",
@@ -332,7 +327,7 @@ function build_schema(entryPoint, rootComponentName, verbosity = {}) {
 
   // And ammend unresolved components
   unresolvedComponents.forEach(({ componentName, ID }) => {
-    if (!components[ID]) {
+    if (!componentsByUID[ID]) {
       const obj = {
         name: `${componentName}`,
         description: "",
@@ -344,7 +339,7 @@ function build_schema(entryPoint, rootComponentName, verbosity = {}) {
         unresolvedDescendants: undefined,
         unresolved: true,
       };
-      components[ID] = obj;
+      componentsByUID[ID] = obj;
       //console.log(`appended ${componentName} to schema as ${ID}`);
     }
   });
@@ -356,7 +351,7 @@ function build_schema(entryPoint, rootComponentName, verbosity = {}) {
 
   // log schema to the console for quick visual analysis
   if (verbosity.debug) {
-    console.dir(components, { depth: null, colors: true });
+    console.dir(componentsByUID, { depth: null, colors: true });
   }
   // log collected warnings
   if (verbosity.verbose || verbosity.debug) {
@@ -366,12 +361,12 @@ function build_schema(entryPoint, rootComponentName, verbosity = {}) {
   // log success message since we have completed the parsing and schema generation process
   if (!verbosity.quiet) {
     log(
-      `✅ Success: Parsed ${Object.keys(components).length} components from ${filesVisited.size} files in ${durationInMs} milliseconds`,
+      `✅ Success: Parsed ${Object.keys(componentsByUID).length} components from ${filesVisited.size} files in ${durationInMs} milliseconds`,
     );
   }
 
   // return schema object for optional further analysis
-  return components;
+  return componentsByUID;
 }
 
 module.exports = build_schema;

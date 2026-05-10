@@ -1,6 +1,6 @@
 /* (parseImport.test.js) Objective: test coverage for ./src/parseImport.js */
 
-const parseFile = require("../src/parseFile");
+const getParsedCode = require("../src/getParsedCode");
 const parseImport = require("../src/parseImport");
 
 describe("parse import", () => {
@@ -71,11 +71,8 @@ describe("parse import", () => {
   ];
   testCases.forEach(({ testName, code, target_specifier, expecting }) => {
     test(String(testName), () => {
-      const topLevelDeclarations = parseFile(code);
-      const result = parseImport(
-        topLevelDeclarations.imports,
-        target_specifier,
-      );
+      const parsedCode = getParsedCode(code);
+      const result = parseImport(parsedCode.imports, target_specifier);
       expect(result).toEqual(expecting);
     });
   });

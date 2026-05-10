@@ -1,10 +1,10 @@
-// parseFile.js
+// getParsedCode.js
 
 const parser = require("@babel/parser");
 const traverse = require("@babel/traverse").default;
 const collectTopLevelDeclarations = require("./collectTopLevelDeclarations");
 
-function parseFile(sourceCode) {
+function getParsedCode(sourceCode) {
   const ast = parser.parse(sourceCode, {
     plugins: ["jsx", "typescript"],
     sourceType: "module",
@@ -23,4 +23,4 @@ function parseFile(sourceCode) {
   return topLevelDeclarations;
 }
 
-module.exports = parseFile;
+module.exports = getParsedCode;
