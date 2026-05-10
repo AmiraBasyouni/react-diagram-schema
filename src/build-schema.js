@@ -158,18 +158,8 @@ function build_schema(entryPoint, rootComponentName, verbosity = {}) {
     // UNRESOLVED DESCENDANTS
     // for each of the component's descendants,
     Object.values(components).forEach((component) => {
-      component.unresolvedDescendants.forEach((unresolvedDescendant) => {
-        // check if descendant is declared in the current file
-        const unresolvedDescendantIsInCurrentFile =
-          components[`${unresolvedDescendant}::${relativeFilePath}`];
-        // if so, set its location to the current file
-        if (unresolvedDescendantIsInCurrentFile) {
-          component["descendants"]?.set(unresolvedDescendant, {
-            location: { filepath: relativeFilePath },
-          });
-          return;
-        }
-        // otherwise,
+      component.unresolvedDescendants.forEach((fp, unresolvedDescendant) => {
+        //(filepath_unresolvedDescendant, unresolvedDescendant) => {
         // collect the descendant's import path
         // and importedName i.e. ComponentA as A if relevant
         const {
@@ -254,16 +244,18 @@ function build_schema(entryPoint, rootComponentName, verbosity = {}) {
           // Guard Clause: if the import statement of this descendant leads to a node_modules file
           // file path will be set to descendantImportPath
           // e.g. TooltipPrimitive::@radix-ui/react-tooltip
-          component.descendants?.set(unresolvedDescendant, {
-            location: { filepath: descendantImportPath },
-          });
+          component.unresolvedDescendants.set(
+            unresolvedDescendant,
+            descendantImportPath,
+          );
           // add path to node_modules
           node_modules.push({ unresolvedDescendant, descendantImportPath });
         } else {
           // update component's descendant's file path
-          component.descendants?.set(unresolvedDescendant, {
-            location: { filepath: resolvedImport_RelativeFilePath },
-          });
+          component.unresolvedDescendants.set(
+            unresolvedDescendant,
+            resolvedImport_RelativeFilePath,
+          );
           // if file has already been visited,
           if (filesVisited.get(resolvedImport_RelativeFilePath)) {
             // resolve remaining unresolved descendants
@@ -291,12 +283,12 @@ function build_schema(entryPoint, rootComponentName, verbosity = {}) {
           }
         }
       });
+      // transform component descendants from type Map to type Array
+      component.descendants = Array.from(
+        component.unresolvedDescendants.entries(),
+      ).map(([name, filepath]) => `${name}::${filepath}`);
       // clear and hide unresolvedDescendants from JSON file output
       component.unresolvedDescendants = undefined;
-      // transform component descendants from type Map to type Array
-      component.descendants = Array.from(component.descendants.entries()).map(
-        ([name, metadata]) => `${name}::${metadata.location.filepath}`,
-      );
     });
   }
 
