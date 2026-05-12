@@ -1,16 +1,15 @@
 /* (build-schema.js) Traverses all files starting from entry point to build full schema structure */
 
 // imports
-const path = require("path");
 const getParsedCode = require("./getParsedCode");
 const getComponents = require("./getComponents");
 const getRelativeFilePath = require("./getRelativeFilePath");
 const getCode = require("./getCode");
-const parseImport = require("./parseImport");
-const resolveComponent = require("./resolveComponent");
 const { isFile, isDirectory, pathExists } = require("./utils/isFile");
 const getRelativeFromAbsolutePath = require("./utils/getRelativeFromAbsolutePath");
 const getAlias = require("./utils/getAlias");
+const updateCache = require("./updateCache");
+const log = require("./log");
 
 // INITIALIZING VARIABLES
 // warnings: an array to collect warnings related to insufficient data
@@ -34,11 +33,6 @@ const unresolvedComponents = [];
 // 3. push the inputs to the stack
 // 4. traverse user's project files using DFS
 function build_schema(entryPoint, rootComponentName, verbosity = {}) {
-  // function for logging messages:
-  function log(message, type = "log") {
-    if (console[type]) console[type](message);
-  }
-
   // Input Validation: detect invalid <entryDirectory|entryFile>
   if (typeof entryPoint != "string") {
     throw new Error(
@@ -158,82 +152,26 @@ function build_schema(entryPoint, rootComponentName, verbosity = {}) {
     // UNRESOLVED DESCENDANTS
     // for each of the component's descendants,
     Object.values(components).forEach((component) => {
+      // filepath_unresolvedDescendant, unresolvedDescendant
       component.unresolvedDescendants.forEach((fp, unresolvedDescendant) => {
-        //(filepath_unresolvedDescendant, unresolvedDescendant) => {
+        const cache = { importedNames, importResolutions };
+        const imports = parsedCode.imports;
         // collect the descendant's import path
-        // and importedName i.e. ComponentA as A if relevant
-        const {
-          importSource: descendantImportPath,
-          localName,
-          importedName,
-        } = parseImport(parsedCode.imports, unresolvedDescendant);
-        const importName = importedName ? importedName : localName;
-        // remember imported Names when relevant, to resolve them later
-        if (importName && unresolvedDescendant !== importName) {
-          importedNames.push({
-            importName,
-            filepath: `${descendantImportPath}::${importName}`,
-            unresolvedDescendant,
-          });
-        }
-        // if this import path was not resolved before,
-        if (
-          !importResolutions.has(
-            `${descendantImportPath}::${unresolvedDescendant}`,
-          )
-        ) {
-          if (verbosity.verbose) {
-            log(
-              `(build-schema) planning to visit import path "${descendantImportPath}" to resolve "${unresolvedDescendant}"`,
-            );
-          }
-          // then resolve it as an absolute file path
-          // case 1) import {ComponentA as A} where A is recorded
-          if (
-            importName &&
-            unresolvedDescendant !== importName &&
-            importResolutions.has(`${descendantImportPath}::${importName}`)
-          ) {
-            // When importedName is relevant,
-            // AND NOT {ComponentA} (in {ComponentA}, unresolvedDescendant = importedName)
-            // AND we've resolved this import path before
-            // Derive the resolution from our list of resolutions
-            const resolvedImport_AbsoluteFilePath = importResolutions.get(
-              `${descendantImportPath}::${importName}`,
-            );
-            // Then record ComponentA's resolution path
-            // (thus mapping the resolution of A to be the same as resolution of ComponentA)
-            importResolutions.set(
-              `${descendantImportPath}::${unresolvedDescendant}`,
-              resolvedImport_AbsoluteFilePath,
-            );
-          } else {
-            // case 2) when importedName is not relevant,
-            // resolve import normally
-            // NOTE resolveComponent might return a node_modules path (because of case 4 in resolveImport)
-            const resolvedImport_AbsoluteFilePath = resolveComponent(
-              unresolvedDescendant,
-              path.resolve(process.cwd(), relativeFilePath),
-              descendantImportPath,
-            );
-
-            // then record resolution path
-            importResolutions.set(
-              `${descendantImportPath}::${unresolvedDescendant}`,
-              resolvedImport_AbsoluteFilePath,
-            );
-          }
-        }
+        const { importName, importSource } = updateCache({
+          imports,
+          unresolvedDescendant,
+          relativeFilePath,
+          cache,
+          verbosity,
+        });
 
         // transform absolute file path to a relative file path
         const resolvedImport_RelativeFilePath = getRelativeFromAbsolutePath(
-          importResolutions.get(
-            `${descendantImportPath}::${unresolvedDescendant}`,
-          ),
+          importResolutions.get(`${importSource}::${unresolvedDescendant}`),
         );
 
         // Guard Clause: if the import statement of this descendant is missing/invalid, log a warning and skip this descendant
-        if (!descendantImportPath) {
+        if (!importSource) {
           warnings.push(
             `WARNING: (build-schema) the descendant "${unresolvedDescendant}" of component "${componentName}" could not be resolved within the file "${relativeFilePath}"`,
           );
@@ -242,14 +180,14 @@ function build_schema(entryPoint, rootComponentName, verbosity = {}) {
           resolvedImport_RelativeFilePath.includes("node_modules")
         ) {
           // Guard Clause: if the import statement of this descendant leads to a node_modules file
-          // file path will be set to descendantImportPath
+          // file path will be set to descendant's import path
           // e.g. TooltipPrimitive::@radix-ui/react-tooltip
           component.unresolvedDescendants.set(
             unresolvedDescendant,
-            descendantImportPath,
+            importSource,
           );
           // add path to node_modules
-          node_modules.push({ unresolvedDescendant, descendantImportPath });
+          node_modules.push({ unresolvedDescendant, importSource });
         } else {
           // update component's descendant's file path
           component.unresolvedDescendants.set(
@@ -282,15 +220,16 @@ function build_schema(entryPoint, rootComponentName, verbosity = {}) {
             });
           }
         }
-      });
+      }); // end of component.unresolvedDescendants.forEach((fp, unresolvedDescendant) => {
+
       // transform component descendants from type Map to type Array
       component.descendants = Array.from(
         component.unresolvedDescendants.entries(),
       ).map(([name, filepath]) => `${name}::${filepath}`);
       // clear and hide unresolvedDescendants from JSON file output
       component.unresolvedDescendants = undefined;
-    });
-  }
+    }); // end of Object.values(components).forEach((component) => {
+  } // end of while loop
 
   // Lastly, create a duplicate component for each importedName
   // e.g. in the case of {ComponentA as A}, create A such that A = ComponentA
@@ -302,8 +241,8 @@ function build_schema(entryPoint, rootComponentName, verbosity = {}) {
   });
 
   // And, create a component for each node_modules file
-  node_modules.forEach(({ unresolvedDescendant, descendantImportPath }) => {
-    componentsByUID[`${unresolvedDescendant}::${descendantImportPath}`] = {
+  node_modules.forEach(({ unresolvedDescendant, importSource }) => {
+    componentsByUID[`${unresolvedDescendant}::${importSource}`] = {
       name: unresolvedDescendant,
       description: "",
       type: "node_module",
@@ -320,7 +259,7 @@ function build_schema(entryPoint, rootComponentName, verbosity = {}) {
       defaultExport: undefined,
       location: {
         line: undefined,
-        filepath: descendantImportPath,
+        filepath: importSource,
       },
     };
   });
