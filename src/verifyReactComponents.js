@@ -283,6 +283,7 @@ function returnsJSXElement(input) {
         case "ArrowFunctionExpression": {
           switch (body_type) {
             // case: const Component = () => <div></div>;
+            case "JSXFragment":
             case "JSXElement": {
               verified.add("returns JSXElement");
               return {
