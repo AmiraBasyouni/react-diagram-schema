@@ -26,14 +26,8 @@ function collectTopLevelDeclarations(program_body) {
           specifiers.forEach((specifier) => {
             const specifier_type = specifier.node.type;
             switch (specifier.node.type) {
-              case "ImportDefaultSpecifier": {
-                topLevelDeclarations.imports.push({
-                  specifier_type,
-                  specifier,
-                  source,
-                });
-                break;
-              }
+              case "ImportNamespaceSpecifier":
+              case "ImportDefaultSpecifier":
               case "ImportSpecifier": {
                 topLevelDeclarations.imports.push({
                   specifier_type,
