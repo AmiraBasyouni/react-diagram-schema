@@ -68,6 +68,25 @@ describe("parse import", () => {
       target_specifier: "Y",
       expecting: { importSource: "./Y", localName: "Y", importedName: "Y" },
     },
+    {
+      testName: "import from node_modules",
+      code: `import { Route } from "react-router-dom";`,
+      target_specifier: "Route",
+      expecting: {
+        importSource: "react-router-dom",
+        importedName: "Route",
+        localName: "Route",
+      },
+    },
+    {
+      testName: "import * as specifier",
+      code: `import * as Dialogue from "@radix-ui/react-dialogue";`,
+      target_specifier: "Dialogue",
+      expecting: {
+        importSource: "@radix-ui/react-dialogue",
+        localName: "Dialogue",
+      },
+    },
   ];
   testCases.forEach(({ testName, code, target_specifier, expecting }) => {
     test(String(testName), () => {
