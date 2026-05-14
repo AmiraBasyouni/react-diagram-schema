@@ -10,8 +10,10 @@ function parseImport(importSpecifiers, descendantName) {
   } of importSpecifiers) {
     const localName = specifier.node.local.name;
     const importedName = specifier.node.imported?.name;
-    // case1: 'import ComponentA from './ComponentA'
+    // case1: import ComponentA from './ComponentA'
+    // case2: import * as ComponentB from './file/path'
     switch (specifier_type) {
+      case "ImportNamespaceSpecifier":
       case "ImportDefaultSpecifier": {
         if (localName === descendantName) {
           return { importSource, localName };
@@ -19,8 +21,8 @@ function parseImport(importSpecifiers, descendantName) {
         break;
       }
       case "ImportSpecifier": {
-        // case2: 'import {ComponentA} from './ComponentA'
-        // case3: 'import {ComponentA as A} from './ComponentA'
+        // case3: import {ComponentA} from './ComponentA'
+        // case4: import {ComponentA as A} from './ComponentA'
         if (localName === descendantName) {
           return { importSource, localName, importedName };
         }

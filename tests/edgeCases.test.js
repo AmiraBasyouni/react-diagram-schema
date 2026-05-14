@@ -1,8 +1,7 @@
 // edgeCases.test.js
 // Goal: Handle tricky structures like nested components, default exports, and files with missing metadata.
+
 const getParsedCode = require("../src/getParsedCode");
-//const verifyReactComponents = require("../src/verifyReactComponents");
-//const parseReactComponents = require("../src/parseReactComponents");
 const getComponents = require("../src/getComponents");
 
 describe("Edge Cases", () => {

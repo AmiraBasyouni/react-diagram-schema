@@ -45,7 +45,7 @@ function parseReactComponents(validatedComponents, filepath) {
           filepath,
         };
 
-        // early return in case of
+        // early return when
         if (verified.has("is nested in component factory")) {
           // const Component = memo(OtherComponent)
           // or export const Component = memo(OtherComponent)
@@ -62,7 +62,7 @@ function parseReactComponents(validatedComponents, filepath) {
           ) {
             return component;
           }
-          // otherwise this is probably a forwardRef( () => {} )
+          // otherwise this can be a forwardRef( () => {} )
         }
 
         // correct the scope of componentPath based on init_type
@@ -191,6 +191,7 @@ function parseReactComponents(validatedComponents, filepath) {
         //EXTRACT non-blockstatement COMPONENT DESCENDANTS (e.g. () => JSX in ArrowFunctionExpressions)
         else {
           const returnStatementPath = componentPath.get("body");
+          //EXTRACT COMPONENT DESCENDANTS
           const resolvedDescendant = extractComponentDescendants({
             returnStatementPath,
             component,
@@ -346,6 +347,13 @@ function extractComponentDescendants({
   // When return is <Jsx/>
   if (returnStatementPath.isJSXElement()) {
     result = handleJSXElement(returnStatementPath);
+
+    // And contains JSX
+    returnStatementPath.traverse({
+      JSXElement(elementPath) {
+        handleJSXElement(elementPath);
+      },
+    });
   } else {
     // When return contains JSX
     returnStatementPath.traverse({
